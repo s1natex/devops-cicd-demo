@@ -13,7 +13,7 @@ repos:
     rev: v1.93.0
     hooks:
       - id: terraform_fmt
-        args: ["-recursive"]
+        args: ["--args=--recursive"]
         files: \.tf$
       - id: terraform_validate
         files: \.tf$
