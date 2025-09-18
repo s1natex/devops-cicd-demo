@@ -2,10 +2,13 @@
 docs:
 basic local setup of the 2 apps and how to run the tests
 listen on 8080
+docker compose up --build (local)
 API → http://localhost:8000/tasks
 Web → http://localhost:8080/
 dockerhub link: https://hub.docker.com/repository/docker/s1natex/my-devops-cicd-demo/general
 terraform destroy on bootstrap
+API empty list - curl http://<PUBLIC_IP>:8000/tasks
+Web index - curl -I http://<PUBLIC_IP>:8080/
 
 
 Future improvemnets points:
@@ -14,11 +17,17 @@ Future improvemnets points:
 - pre commit for python, docker , terraform -- sast dast, sca and secret scanning
 - add auto tag bump to the pipeline (x.y.z) for now sha is enough with latest
 - apply single main branch strategy where dev branch has the initial ci gate on pr; if passed it merges and main cicd runs with terraform ci first
+- create ci for terraform files to run exclusivly on the terraform folder - apply best practices and optimizations
+- module for terraform on seperate repo with ci(single branch), integrate with current terraform build
+- Update readme with final instructions
+- create integration and e2e tests and add to pipeline - apply best practices and optimizations
+- migrate to k8s and deploy (using eks or ecs+fargate?)
 
 
 Troubleshooting:
 - nginx.conf - listen on 8080 (non-root cannot bind <1024)
 - AWS auth: Git Bash=export AWS_PROFILE=devops-demo, PowerShell=$env:AWS_PROFILE = "devops-demo", check=aws sts get-caller-identity --profile devops-demo
+- terraform/ec2 terraform init -backend-config "backend.hcl"
 ==========================================================================================
 - [x] - Create new Repo and connect to GitHub my-devops-cicd-demo
 - [x] - create git ignore for the project
@@ -32,14 +41,14 @@ Troubleshooting:
 - [x] - create pre commit for python, docker , terraform
 - [x] - create initial ci for the app build-test-push to dockerhub incrementally - apply best practices and optimizations
 - [x] - auth with the aws account locally
-- [] - create terraform bootstrap for remote state and oidc for the repo and run it
+- [x] - create terraform bootstrap for remote state and oidc for the repo and run it
 - [] - create a simple ec2 deployment with terraform run and test localy(EBS storage attached to the EC2 will hold the database files, via Docker volume mounts)
 - [] - create bash script to run on the ec2 and deploy the compose file (terraform user_data.sh) - test apply
-- [] - create ci for terraform files to run exclusivly on the terraform folder - apply best practices and optimizations
+- [x] - create ci for terraform files to run exclusivly on the terraform folder - apply best practices and optimizations
 - [] - integrate cd part for the deployment to aws(pipeline) - apply best practices and optimizations
-- [] - create integration and e2e and add to pipeline - apply best practices and optimizations
+- [x] - create integration and e2e tests and add to pipeline - apply best practices and optimizations
 - [] - run the pipeline and verify connectivity via browser
 - [x] - apply single main branch startegy where dev branch has the initial ci gate on pr; if passed it merges and main cicd runs with terraform ci first
 - [x] - list future improvemnets
-- [] - Update readme with final instructions
-- [] - Review final project files
+- [x] - Update readme with final instructions
+- [x] - Review final project files
