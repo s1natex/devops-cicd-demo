@@ -11,6 +11,8 @@ API empty list - curl http://<PUBLIC_IP>:8000/tasks
 Web index - curl -I http://<PUBLIC_IP>:8080/
 
 
+
+
 Future improvemnets points:
 - Limitation in-memory only - restart of the backend will wipe all tasks
 - move frontend to nodejs
@@ -28,6 +30,7 @@ Troubleshooting:
 - nginx.conf - listen on 8080 (non-root cannot bind <1024)
 - AWS auth: Git Bash=export AWS_PROFILE=devops-demo, PowerShell=$env:AWS_PROFILE = "devops-demo", check=aws sts get-caller-identity --profile devops-demo
 - terraform/ec2 terraform init -backend-config "backend.hcl"
+- ec2 terraform force-unlock -force <key>, terraform apply -lock-timeout=5m
 ==========================================================================================
 - [x] - Create new Repo and connect to GitHub my-devops-cicd-demo
 - [x] - create git ignore for the project
