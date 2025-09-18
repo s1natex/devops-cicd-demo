@@ -2,29 +2,27 @@
 docs:
 
 Future improvemnets:
-
+Limitation in-memory only - restart of the backend will wipe all tasks
 ==========================================================================================
-Create new Repo and connect to GitHub my-devops-cicd-demo
-create git ignore for the project
-create python api for a task list 
-create front end that shows the tasks with tick boxes and the ability to add and remove tasks
-write unittests for both apps
-dockerize both apps
-apply best practices and dockerignore to the dockerfiles
-wrap with compose - run -run tests
-push initial images(tag x.y.z z=start) to dockerhub 
-create pre commit for python, docker , terraform
-create initial ci for the app build-test-push to dockerhub incrementally - apply best practices and optimizations
-
-auth with the aws account locally
-create terraform bootstrap for remote state and oidc for the repo and run it
-create a simple ec2 deployment with terraform run and test localy(EBS storage attached to the EC2 will hold the database files, via Docker volume mounts)
-create bash script to run on the ec2 and deploy the compose file (terraform user_data.sh) - test apply
-
-create ci for terraform files to run exclusivly on the terraform folder - apply best practices and optimizations
-integrate cd part for the deployment to aws(pipeline) - apply best practices and optimizations
-create integration and e2e and add to pipeline - apply best practices and optimizations
-run the pipeline and verify connectivity via browser
-apply single main branch startegy where dev branch has the initial ci gate on pr; if passed it merges and main cicd runs with terraform ci first
-list future improvemnets
-Update readme with final instructions
+- [x] - Create new Repo and connect to GitHub my-devops-cicd-demo
+- [x] - create git ignore for the project
+- [] - create python api for a task list 
+- [] - create front end that shows the tasks with tick boxes and the ability to add and remove tasks
+- [] - write unittests for both apps
+- [] - dockerize both apps
+- [] - apply best practices and dockerignore to the dockerfiles
+- [] - wrap with compose - run -run tests
+- [] - push initial images(tag x.y.z z=start) to dockerhub 
+- [] - create pre commit for python, docker , terraform
+- [] - create initial ci for the app build-test-push to dockerhub incrementally - apply best practices and optimizations
+- [] - auth with the aws account locally
+- [] - create terraform bootstrap for remote state and oidc for the repo and run it
+- [] - create a simple ec2 deployment with terraform run and test localy(EBS storage attached to the EC2 will hold the database files, via Docker volume mounts)
+- [] - create bash script to run on the ec2 and deploy the compose file (terraform user_data.sh) - test apply
+- [] - create ci for terraform files to run exclusivly on the terraform folder - apply best practices and optimizations
+- [] - integrate cd part for the deployment to aws(pipeline) - apply best practices and optimizations
+- [] - create integration and e2e and add to pipeline - apply best practices and optimizations
+- [] - run the pipeline and verify connectivity via browser
+- [] - apply single main branch startegy where dev branch has the initial ci gate on pr; if passed it merges and main cicd runs with terraform ci first
+- [] - list future improvemnets
+- [] - Update readme with final instructions
