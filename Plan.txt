@@ -10,9 +10,6 @@ terraform destroy on bootstrap
 API empty list - curl http://<PUBLIC_IP>:8000/tasks
 Web index - curl -I http://<PUBLIC_IP>:8080/
 
-
-
-
 Future improvemnets points:
 - Limitation in-memory only - restart of the backend will wipe all tasks
 - move frontend to nodejs
@@ -45,12 +42,12 @@ Troubleshooting:
 - [x] - create initial ci for the app build-test-push to dockerhub incrementally - apply best practices and optimizations
 - [x] - auth with the aws account locally
 - [x] - create terraform bootstrap for remote state and oidc for the repo and run it
-- [] - create a simple ec2 deployment with terraform run and test localy(EBS storage attached to the EC2 will hold the database files, via Docker volume mounts)
-- [] - create bash script to run on the ec2 and deploy the compose file (terraform user_data.sh) - test apply
+- [x] - create a simple ec2 deployment with terraform run and test localy(EBS storage attached to the EC2 will hold the database files, via Docker volume mounts)
+- [x] - create bash script to run on the ec2 and deploy the compose file (terraform user_data.sh) - test apply
 - [x] - create ci for terraform files to run exclusivly on the terraform folder - apply best practices and optimizations
-- [] - integrate cd part for the deployment to aws(pipeline) - apply best practices and optimizations
+- [x] - integrate cd part for the deployment to aws(pipeline) - apply best practices and optimizations
 - [x] - create integration and e2e tests and add to pipeline - apply best practices and optimizations
-- [] - run the pipeline and verify connectivity via browser
+- [x] - run the pipeline and verify connectivity via browser
 - [x] - apply single main branch startegy where dev branch has the initial ci gate on pr; if passed it merges and main cicd runs with terraform ci first
 - [x] - list future improvemnets
 - [x] - Update readme with final instructions
