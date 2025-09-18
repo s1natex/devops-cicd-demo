@@ -65,6 +65,13 @@ resource "aws_instance" "ec2" {
   key_name               = var.key_name
   iam_instance_profile   = null
 
+  root_block_device {
+    volume_type = "gp3"
+    volume_size = var.root_volume_size_gb
+    encrypted   = var.encrypt_ebs
+    kms_key_id  = var.kms_key_id
+  }
+
   user_data = file("${path.module}/user_data.sh")
 
   tags = {
@@ -76,10 +83,10 @@ resource "aws_ebs_volume" "data" {
   availability_zone = aws_instance.ec2.availability_zone
   size              = var.volume_size_gb
   type              = "gp3"
+  encrypted         = var.encrypt_ebs
+  kms_key_id        = var.kms_key_id
 
-  tags = {
-    Name = "${var.project}-data"
-  }
+  tags = { Name = "${var.project}-data" }
 }
 
 resource "aws_volume_attachment" "data_att" {

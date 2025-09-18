@@ -42,3 +42,19 @@ variable "web_tag" {
   type    = string
   default = "web-latest"
 }
+
+variable "encrypt_ebs" {
+  type    = bool
+  default = true
+}
+
+variable "kms_key_id" {
+  description = "KMS key for EBS encryption (null = AWS managed key aws/ebs)"
+  type        = string
+  default     = null
+}
+
+variable "root_volume_size_gb" {
+  type    = number
+  default = 8
+}

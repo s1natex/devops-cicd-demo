@@ -22,7 +22,7 @@ Future improvemnets points:
 - Update readme with final instructions
 - create integration and e2e tests and add to pipeline - apply best practices and optimizations
 - migrate to k8s and deploy (using eks or ecs+fargate?)
-
+- change deployment approach from simple script
 
 Troubleshooting:
 - nginx.conf - listen on 8080 (non-root cannot bind <1024)
