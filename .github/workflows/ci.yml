@@ -1,0 +1,120 @@
+name: ci
+
+on:
+#   push:
+#     branches: ["**"]
+#     tags: ["v*.*.*"]
+#   pull_request:
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: "3.12"
+  IMAGE_NAME: "s1natex/my-devops-cicd-demo"
+
+jobs:
+  test:
+    name: Test (API + Frontend)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install deps (API + tests)
+        run: |
+          if [ -f app/api/requirements.txt ]; then
+            pip install -r app/api/requirements.txt
+          elif [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+          # ensure test deps present (idempotent)
+          pip install pytest beautifulsoup4 httpx
+      - name: Run tests
+        run: |
+          pytest -q app/api/test_api.py app/frontend/test_frontend.py
+
+  build-and-push:
+    name: Build & Push Docker images
+    needs: [test]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        if: ${{ github.event_name != 'pull_request' }}
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Derive ref info
+        id: vars
+        run: |
+          SHA_SHORT="$(git rev-parse --short HEAD)"
+          REF_NAME="${GITHUB_REF##*/}"
+          echo "sha_short=$SHA_SHORT" >> $GITHUB_OUTPUT
+          echo "ref_name=$REF_NAME" >> $GITHUB_OUTPUT
+          # Semver if tag vX.Y.Z
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            echo "is_tag=true" >> $GITHUB_OUTPUT
+            echo "semver=${REF_NAME#v}" >> $GITHUB_OUTPUT
+          else
+            echo "is_tag=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build API (no push for PRs)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: app/api/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: |
+            ${{ env.IMAGE_NAME }}:api-${{ steps.vars.outputs.ref_name }}-${{ steps.vars.outputs.sha_short }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILDKIT_INLINE_CACHE=1
+      - name: Push API semver/latest (only on vX.Y.Z tag)
+        if: ${{ steps.vars.outputs.is_tag == 'true' }}
+        run: |
+          docker build -t $IMAGE -f app/api/Dockerfile .
+          docker tag $IMAGE "${IMAGE}:api-${SEMVER}"
+          docker tag $IMAGE "${IMAGE}:api-latest"
+          docker push "${IMAGE}:api-${SEMVER}"
+          docker push "${IMAGE}:api-latest"
+        env:
+          IMAGE: ${{ env.IMAGE_NAME }}
+          SEMVER: ${{ steps.vars.outputs.semver }}
+
+      - name: Build Web
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: app/frontend/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: |
+            ${{ env.IMAGE_NAME }}:web-${{ steps.vars.outputs.ref_name }}-${{ steps.vars.outputs.sha_short }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILDKIT_INLINE_CACHE=1
+      - name: Push Web semver/latest (only on vX.Y.Z tag)
+        if: ${{ steps.vars.outputs.is_tag == 'true' }}
+        run: |
+          docker build -t $IMAGE -f app/frontend/Dockerfile .
+          docker tag $IMAGE "${IMAGE}:web-${SEMVER}"
+          docker tag $IMAGE "${IMAGE}:web-latest"
+          docker push "${IMAGE}:web-${SEMVER}"
+          docker push "${IMAGE}:web-latest"
+        env:
+          IMAGE: ${{ env.IMAGE_NAME }}
+          SEMVER: ${{ steps.vars.outputs.semver }}
