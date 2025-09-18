@@ -3,10 +3,11 @@ docs:
 
 Future improvemnets:
 Limitation in-memory only - restart of the backend will wipe all tasks
+move frontend to nodejs
 ==========================================================================================
 - [x] - Create new Repo and connect to GitHub my-devops-cicd-demo
 - [x] - create git ignore for the project
-- [] - create python api for a task list 
+- [x] - create python api for a task list 
 - [] - create front end that shows the tasks with tick boxes and the ability to add and remove tasks
 - [] - write unittests for both apps
 - [] - dockerize both apps
