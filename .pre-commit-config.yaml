@@ -1,0 +1,19 @@
+exclude: ^Plan\.txt$
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+      - id: check-added-large-files
+
+  - repo: https://github.com/antonbabenko/pre-commit-terraform
+    rev: v1.93.0
+    hooks:
+      - id: terraform_fmt
+        args: ["-recursive"]
+        files: \.tf$
+      - id: terraform_validate
+        files: \.tf$
