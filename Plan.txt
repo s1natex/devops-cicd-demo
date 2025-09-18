@@ -2,11 +2,14 @@
 docs:
 basic local setup of the 2 apps and how to run the tests
 listen on 8080
+API → http://localhost:8000/tasks
+Web → http://localhost:8080/
 
 
 Future improvemnets points:
 - Limitation in-memory only - restart of the backend will wipe all tasks
 - move frontend to nodejs
+- pre commit for python, docker , terraform
 
 Troubleshooting:
 - nginx.conf - listen on 8080 (non-root cannot bind <1024)
@@ -17,10 +20,10 @@ Troubleshooting:
 - [x] - create front end that shows the tasks with tick boxes and the ability to add and remove tasks
 - [x] - write unittests for both apps
 - [x] - dockerize both apps
-- [] - apply best practices and dockerignore to the dockerfiles
+- [x] - apply best practices and dockerignore to the dockerfiles
 - [] - wrap with compose - run -run tests
 - [] - push initial images(tag x.y.z z=start) to dockerhub 
-- [] - create pre commit for python, docker , terraform
+- [x] - create pre commit for python, docker , terraform
 - [] - create initial ci for the app build-test-push to dockerhub incrementally - apply best practices and optimizations
 - [] - auth with the aws account locally
 - [] - create terraform bootstrap for remote state and oidc for the repo and run it

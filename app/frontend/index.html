@@ -34,28 +34,23 @@
   </div>
 
   <script>
-    // --- Configuration ---
-    const API_BASE = localStorage.getItem('API_BASE') || 'http://localhost:8000';
+    const API_BASE = localStorage.getItem('API_BASE') || '/api';
     document.getElementById('api-base-label').textContent = API_BASE;
 
-    // Optional: allow quickly changing API base by clicking the label
-    document.getElementById('api-base-label').addEventListener('click', async () => {
+    document.getElementById('api-base-label').addEventListener('click', () => {
       const next = prompt('API base URL', API_BASE);
       if (next) { localStorage.setItem('API_BASE', next); location.reload(); }
     });
 
-    // --- Helpers ---
     const listEl = document.getElementById('list');
     const formEl = document.getElementById('add-form');
     const inputEl = document.getElementById('task-input');
 
-    function nextId(tasks) {
-      // Backend currently expects client-provided id; use timestamp for uniqueness.
-      return Date.now();
-    }
+    const nextId = () => Date.now();
 
-    function liTemplate(task) {
+    const liTemplate = (task) => {
       const li = document.createElement('li');
+
       const checkbox = document.createElement('input');
       checkbox.type = 'checkbox';
       checkbox.checked = !!task.completed;
@@ -75,10 +70,10 @@
       li.appendChild(del);
       li.dataset.id = task.id;
       return li;
-    }
+    };
 
     async function fetchJSON(url, opts) {
-      const res = await fetch(url, Object.assign({ headers: { 'Content-Type': 'application/json' } }, opts));
+      const res = await fetch(url, { headers: { 'Content-Type': 'application/json' }, ...opts });
       if (!res.ok) throw new Error(await res.text());
       return res.json();
     }

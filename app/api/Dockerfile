@@ -13,7 +13,7 @@ ARG APP_USER=appuser
 RUN useradd --create-home --shell /usr/sbin/nologin ${APP_USER}
 WORKDIR /app
 
-COPY requirements.txt /app/requirements.txt
+COPY app/api/requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r /app/requirements.txt
 
 COPY app /app/app
