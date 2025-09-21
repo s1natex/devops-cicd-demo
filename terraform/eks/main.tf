@@ -72,6 +72,12 @@ module "eks" {
     }
   }
 
+  cluster_addons = {
+    amazon-cloudwatch-observability = {
+      resolve_conflicts = "OVERWRITE"
+    }
+  }
+
   enable_cluster_creator_admin_permissions = true
 
   tags = { Project = var.project }
