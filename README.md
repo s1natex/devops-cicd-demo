@@ -10,7 +10,7 @@ docker compose up --build
 # Clean Up
 docker compose down
 ```
-## Terraform Bootstrap
+## Terraform Bootstrap Local
 - Run Bootstrap before using AWS
 ```
 terraform init
@@ -22,4 +22,13 @@ terraform apply
 # Clean Up
 terraform destroy
 # Check AWS user
+```
+## EKS Clean Up
+```
+cd terraform/eks
+kubectl delete namespace app
+terraform destroy
+
+cd terraform/bootstrap
+terraform destroy
 ```
