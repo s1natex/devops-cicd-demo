@@ -80,5 +80,17 @@ module "eks" {
 
   enable_cluster_creator_admin_permissions = true
 
+  access_entries = {
+    gha-admin = {
+      principal_arn = "arn:aws:iam::194722430316:role/my-devops-cicd-demo-gha-oidc"
+      policy_associations = {
+        admin = {
+          policy_arn   = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+          access_scope = { type = "cluster" }
+        }
+      }
+    }
+  }
+
   tags = { Project = var.project }
 }

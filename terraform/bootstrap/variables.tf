@@ -19,7 +19,7 @@ variable "github_owner" {
 variable "github_repo" {
   description = "GitHub repository name"
   type        = string
-  default     = "my-devops-cicd-demo"
+  default     = "devops-cicd-demo"
 }
 
 variable "allowed_branches" {
