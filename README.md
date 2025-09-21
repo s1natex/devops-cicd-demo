@@ -1,4 +1,5 @@
 ## [k8s LOCAL testing via Docker Desktop](./k8s/LocalTest.md)
+## [K8s EKS LOCAL testing via AWS](./k8s/EksTest.md)
 ## Local testing via docker compose
 ```
 docker compose up --build
