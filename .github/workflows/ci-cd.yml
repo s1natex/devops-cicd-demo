@@ -1,0 +1,79 @@
+name: ci-cd
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: eu-north-1
+  EKS_CLUSTER: my-devops-cicd-demo-eks
+  IMAGE: s1natex/my-devops-cicd-demo
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - name: Install deps
+        run: pip install -r app/requirements.txt -r requirements-dev.txt
+      - name: Unit + Integration tests
+        run: PYTHONPATH=. pytest tests/unit tests/integration -q
+
+  build_push:
+    needs: test
+    runs-on: ubuntu-latest
+    env:
+      DATE: ${{ github.event.repository.updated_at || 'date' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compute tag
+        id: tag
+        run: |
+          DATE=$(date +%Y%m%d)
+          GIT_SHA=${GITHUB_SHA::7}
+          echo "TAG=${DATE}-${GIT_SHA}" >> $GITHUB_OUTPUT
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USER }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build image
+        run: |
+          docker build -t $IMAGE:${{ steps.tag.outputs.TAG }} ./app
+          docker tag $IMAGE:${{ steps.tag.outputs.TAG }} $IMAGE:latest
+      - name: Push image
+        run: |
+          docker push $IMAGE:${{ steps.tag.outputs.TAG }}
+          docker push $IMAGE:latest
+    outputs:
+      TAG: ${{ steps.tag.outputs.TAG }}
+
+  deploy:
+    needs: build_push
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure AWS (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::194722430316:role/my-devops-cicd-demo-gha-oidc
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Update kubeconfig
+        run: aws eks update-kubeconfig --name "$EKS_CLUSTER" --region "$AWS_REGION"
+      - name: Apply manifests
+        run: |
+          kubectl apply -f k8s/namespace.yaml
+          kubectl apply -f k8s/deployment.yaml
+          kubectl apply -f k8s/service.yaml
+      - name: Set image + rollout
+        run: |
+          kubectl -n app set image deploy/hello web=$IMAGE:${{ needs.build_push.outputs.TAG }}
+          kubectl -n app rollout status deploy/hello
+      - name: Output service hostname
+        run: |
+          kubectl -n app get svc hello-svc -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'; echo
