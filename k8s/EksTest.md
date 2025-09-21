@@ -33,8 +33,33 @@ echo $EXTERNAL_DNS
 curl -s "http://$EXTERNAL_DNS/"
 curl -s -o /dev/null -w "%{http_code}\n" "http://$EXTERNAL_DNS/healthz"
 ```
+### Verify CloudWatch & Container Insights
+```
+# generate some traffic
+for i in {1..50}; do curl -s "http://$EXTERNAL_DNS/healthz" >/dev/null; done
+
+# confirm log groups exist
+aws logs describe-log-groups --log-group-name-prefix "/aws/containerinsights/my-devops-cicd-demo-eks" --region eu-north-1
+
+# list metrics namespace
+aws cloudwatch list-metrics --namespace "ContainerInsights" --region eu-north-1 --max-items 5
+```
 ### Clean Up
 ```
 kubectl delete namespace app
 terraform destroy
+```
+
+- If AWS shows no addons:
+```
+# 1) Re-init
+terraform init -reconfigure -backend-config=../../envs/dev/backend.hcl
+
+# 2) Remove any stale addon resources from state (if present)
+terraform state list | grep aws_eks_addon || true
+terraform state rm 'module.eks.aws_eks_addon.this["amazon-cloudwatch-observability"]' || true
+terraform state rm 'aws_eks_addon.cloudwatch_observability' || true
+
+# 3) Apply – Terraform should now CREATE the addon
+terraform apply -auto-approve
 ```
