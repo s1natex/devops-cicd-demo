@@ -18,6 +18,7 @@ A Hello World app Containerized and deployed to an EKS Cluster on AWS via automa
 ### Terraform Bootstrap Local
 - Run Bootstrap before using AWS to configure OIDC and Remote State with locking and Versioning
 ```
+cd terraform/bootstrap
 terraform init
 terraform validate
 terraform fmt
@@ -38,11 +39,13 @@ terraform destroy
 
 cd terraform/bootstrap
 terraform destroy
+# Check AWS user
 ```
 # Local Docker Desktop Deployment
 ### Terraform Bootstrap Local
 - Run Bootstrap before using AWS
 ```
+cd terraform/bootstrap
 terraform init
 terraform validate
 terraform fmt
