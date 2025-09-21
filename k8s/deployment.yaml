@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello
+  namespace: app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: hello
+  template:
+    metadata:
+      labels:
+        app: hello
+    spec:
+      containers:
+      - name: web
+        image: s1natex/my-devops-cicd-demo:latest
+        ports:
+        - containerPort: 8000
+        readinessProbe:
+          httpGet: { path: /healthz, port: 8000 }
+          initialDelaySeconds: 2
+          periodSeconds: 5
+        livenessProbe:
+          httpGet: { path: /healthz, port: 8000 }
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        resources:
+          requests: { cpu: "100m", memory: "128Mi" }
+          limits:   { cpu: "300m", memory: "256Mi" }
