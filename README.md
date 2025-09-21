@@ -9,3 +9,16 @@ docker compose up --build
 # Clean Up
 docker compose down
 ```
+## Terraform Bootstrap
+- Run Bootstrap before using AWS
+```
+terraform init
+terraform validate
+terraform fmt
+terraform plan
+terraform apply
+
+# Clean Up
+terraform destroy
+# Check AWS user
+```
