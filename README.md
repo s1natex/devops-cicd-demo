@@ -1,4 +1,6 @@
 # EKS cluster
+[![CI](https://github.com/s1natex/devops-cicd-demo/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/s1natex/devops-cicd-demo/actions/workflows/ci.yml)
+
 A Hello World app Containerized and deployed to an EKS Cluster on AWS via automated CI/CD pipeline, featuring main branch protection with ci gate for pull requests
 
 # Features
