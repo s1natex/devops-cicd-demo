@@ -90,18 +90,10 @@ jobs:
 
       - name: Update deployment manifest with new image
         run: |
-          sed -i "s|image: .*s1natex/my-devops-cicd-demo.*|image: $IMAGE:${{ needs.build-push.outputs.TAG }}|" k8s/deployment.yaml
+          sed -i "s|^\(\s*image:\s*\)s1natex/my-devops-cicd-demo:.*$|\1s1natex/my-devops-cicd-demo:${{ needs.build-push.outputs.TAG }}|" k8s/deployment.yaml
 
       - name: Show diff
-        run: git --no-pager diff
-
-      - name: Commit changes
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git checkout -b promote/${{ needs.build-push.outputs.TAG }}
-          git add k8s/deployment.yaml
-          git commit -m "Update image to $IMAGE:${{ needs.build-push.outputs.TAG }}" || echo "No changes to commit"
+        run: git --no-pager diff -- k8s/deployment.yaml
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6
@@ -110,5 +102,9 @@ jobs:
           base: main
           title: "Promote image ${{ needs.build-push.outputs.TAG }} to main"
           body: |
-            New image pushed: `${{ env.IMAGE }}:${{ needs.build-push.outputs.TAG }}`
-            This PR updates `k8s/deployment.yaml` with the new image tag.
+            New image: `s1natex/my-devops-cicd-demo:${{ needs.build-push.outputs.TAG }}`
+            This PR updates `k8s/deployment.yaml` with the new immutable tag so ArgoCD can sync it.
+          commit-message: "chore(deploy): update image to s1natex/my-devops-cicd-demo:${{ needs.build-push.outputs.TAG }}"
+          add-paths: |
+            k8s/deployment.yaml
+          delete-branch: true
