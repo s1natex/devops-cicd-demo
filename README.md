@@ -11,7 +11,6 @@ Used ArgoCD for alternative CICD with an initial Dev ci that builds runs tests p
 - #### For ArgoCD activate "ArgoCD-protection-to-main" Ruleset
 
 - ## [Argo CD Apply](./argo/ArgoCD.md)
-- Manually Update the image tag in deployment.yaml for argoCD to sync
 
 # Features
 - Python Flask “Hello World” app (+ /healthz)
