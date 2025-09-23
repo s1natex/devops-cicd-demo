@@ -90,8 +90,10 @@ jobs:
 
       - name: Update deployment manifest with new image
         run: |
-          sed -i "s|image: .*|image: $IMAGE:${{ needs.build-push.outputs.TAG }}|" k8s/deployment.yaml
-          echo "Updated k8s/deployment.yaml with new image"
+          sed -i "s|image: .*s1natex/my-devops-cicd-demo.*|image: $IMAGE:${{ needs.build-push.outputs.TAG }}|" k8s/deployment.yaml
+
+      - name: Show diff
+        run: git --no-pager diff
 
       - name: Commit changes
         run: |
