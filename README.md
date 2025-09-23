@@ -10,6 +10,8 @@ Used ArgoCD for alternative CICD with an initial Dev ci that builds runs tests p
 - #### For Legacy CICD activate "protection-to-main" Ruleset
 - #### For ArgoCD activate "ArgoCD-protection-to-main" Ruleset
 
+- ## [Argo CD Apply](./argo/ArgoCD.md)
+
 # Features
 - Python Flask “Hello World” app (+ /healthz)
 - Dockerized app + Docker Compose for local run
