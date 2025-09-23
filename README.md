@@ -3,6 +3,13 @@
 
 A Hello World app Containerized and deployed to an EKS Cluster on AWS via automated CI/CD pipeline, featuring main branch protection with ci gate for pull requests
 
+# ArgoCD
+Used ArgoCD for alternative CICD with an initial Dev ci that builds runs tests push to registry and open pr where ArgoCD syncs with main protected branch
+
+- #### [Argo CI flow Docs](.github/workflows/Argo-CI.md)
+- #### For Legacy CICD activate "protection-to-main" Ruleset
+- #### For ArgoCD activate "ArgoCD-protection-to-main" Ruleset
+
 # Features
 - Python Flask “Hello World” app (+ /healthz)
 - Dockerized app + Docker Compose for local run
