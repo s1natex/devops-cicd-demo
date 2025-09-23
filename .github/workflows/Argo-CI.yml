@@ -82,11 +82,25 @@ jobs:
     outputs:
       TAG: ${{ steps.tag.outputs.TAG }}
 
-  open-pr:
+  update-manifests:
     runs-on: ubuntu-latest
     needs: build-push
     steps:
       - uses: actions/checkout@v4
+
+      - name: Update deployment manifest with new image
+        run: |
+          sed -i "s|image: .*|image: $IMAGE:${{ needs.build-push.outputs.TAG }}|" k8s/deployment.yaml
+          echo "Updated k8s/deployment.yaml with new image"
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b promote/${{ needs.build-push.outputs.TAG }}
+          git add k8s/deployment.yaml
+          git commit -m "Update image to $IMAGE:${{ needs.build-push.outputs.TAG }}" || echo "No changes to commit"
+
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6
         with:
@@ -95,4 +109,4 @@ jobs:
           title: "Promote image ${{ needs.build-push.outputs.TAG }} to main"
           body: |
             New image pushed: `${{ env.IMAGE }}:${{ needs.build-push.outputs.TAG }}`
-            Please review and approve for promotion to **main**.
+            This PR updates `k8s/deployment.yaml` with the new image tag.
