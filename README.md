@@ -76,6 +76,10 @@ docker compose up --build
 docker compose down
 ```
 # Screenshot Validation:
+- **ArgoCD Dashboard**
+
+![ArgoCD Dashboard](./media/argocd.png)
+
 - **Terraform Output**
 
 ![Terraform Output](./media/terraformoutput.png)
