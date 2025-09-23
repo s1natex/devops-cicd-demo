@@ -25,6 +25,49 @@ kubectl -n argocd logs statefulset/argocd-application-controller -c argocd-appli
 ```
 kubectl apply -f argo/app-of-apps.yaml
 ```
+
+- ## Manually Update each deployment with the latest tag
+# OR
+- ## install Image Updater
+```
+kubectl -n argocd apply -f https://raw.githubusercontent.com/argoproj-labs/argocd-image-updater/stable/manifests/install.yaml
+
+# Confirm that its running
+kubectl -n argocd get pods | grep image-updater
+
+# Give it GitHub + Docker Hub access
+    - Read Docker Hub
+    - Write to GitHub
+
+kubectl -n argocd create secret generic git-creds \
+  --from-literal=username=<your-github-username> \
+  --from-literal=password=<your-gh-pat>
+
+kubectl -n argocd label secret git-creds \
+  argocd-image-updater.argoproj.io/credentials=git
+```
+
+- Update hello.yaml
+```
+metadata:
+  name: hello
+  namespace: argocd
+  annotations:
+    argocd-image-updater.argoproj.io/image-list: hello=s1natex/my-devops-cicd-demo
+    argocd-image-updater.argoproj.io/hello.update-strategy: latest
+    argocd-image-updater.argoproj.io/hello.tag-pattern: ^[0-9]{8}-[0-9a-f]{7}$
+    argocd-image-updater.argoproj.io/write-back-method: git
+    argocd-image-updater.argoproj.io/write-back-target: kustomization
+```
+- Apply update
+```
+kubectl apply -f argo/apps/hello.yaml
+```
+- Build and push a new image with a fresh tag -> Test the flow
+```
+kubectl -n argocd logs deploy/argocd-image-updater
+```
+
 ## Watch sync
 ```
 kubectl -n argocd get pods
