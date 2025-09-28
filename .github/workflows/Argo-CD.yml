@@ -1,0 +1,72 @@
+name: Argo-CD
+
+on:
+  workflow_run:
+    workflows: ["Argo-CI"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+env:
+  IMAGE_DEFAULT: s1natex/my-devops-cicd-demo
+  DEPLOYMENT_FILE: k8s/deployment.yaml
+  TARGET_BRANCH: main
+
+jobs:
+  bump-image-tag:
+    if: (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifact (from Argo-CI run)
+        if: github.event_name == 'workflow_run'
+        uses: dawidd6/action-download-artifact@v3
+        with:
+          run_id: ${{ github.event.workflow_run.id }}
+          name: image-info
+
+      - name: Set defaults for manual run
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          echo "${IMAGE_DEFAULT}" > image.txt
+          DATE=$(date +%Y%m%d); GIT_SHA=${GITHUB_SHA::7}
+          echo "${DATE}-${GIT_SHA}" > tag.txt
+
+      - name: Read image and tag
+        id: meta
+        run: |
+          IMAGE=$(tr -d '\n' < image.txt)
+          TAG=$(tr -d '\n' < tag.txt)
+          echo "image=$IMAGE" >> $GITHUB_OUTPUT
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ env.TARGET_BRANCH }}
+
+      - name: Install yq
+        run: |
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/v4.44.3/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+
+      - name: Update Deployment image tag
+        env:
+          IMAGE: ${{ steps.meta.outputs.image }}
+          TAG: ${{ steps.meta.outputs.tag }}
+        run: |
+          yq -i '.spec.template.spec.containers |= map(.image = strenv(IMAGE) + ":" + strenv(TAG))' "$DEPLOYMENT_FILE"
+          git status --porcelain
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$DEPLOYMENT_FILE"
+          if git diff --cached --quiet; then
+            echo "No changes to commit"; exit 0
+          fi
+          git commit -m "chore(argocd): bump image to ${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.tag }}"
+          git push origin "$TARGET_BRANCH"
