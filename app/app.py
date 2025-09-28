@@ -5,7 +5,7 @@ app = Flask(__name__)
 
 @app.get("/")
 def index():
-    return "Hello, World!! From ArgoCD sync!"
+    return "Hello, World!! From ArgoCD sync!, Now it auto updates tags!"
 
 @app.get("/healthz")
 def healthz():
