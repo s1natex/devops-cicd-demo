@@ -33,7 +33,7 @@ jobs:
   test-e2e:
     name: e2e on docker compose
     runs-on: ubuntu-latest
-    needs: tests-unit-integration
+    needs: test-unit-integration
 
     steps:
       - uses: actions/checkout@v4
