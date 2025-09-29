@@ -11,7 +11,7 @@ on:
       - 'terraform/**'
       - 'tests/**'
       - '.github/workflows/**'
-  workflow_dispatch:
+  workflow_dispatch:  # Use outside of Main branch for testing
 
 permissions:
   contents: write
