@@ -1,4 +1,4 @@
-name: Argo-CI
+name: Argo-CI-CD
 
 on:
   push:
