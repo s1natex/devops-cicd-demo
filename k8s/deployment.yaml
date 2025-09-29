@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: web
-          image: s1natex/my-devops-cicd-demo:20250929-fb9bfca
+          image: s1natex/my-devops-cicd-demo:20250929-a32543f
           ports:
             - containerPort: 8000
           readinessProbe:
