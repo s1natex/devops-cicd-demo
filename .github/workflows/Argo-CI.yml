@@ -19,7 +19,7 @@ permissions:
 env:
   IMAGE: s1natex/my-devops-cicd-demo
   DEPLOYMENT_FILE: k8s/deployment.yaml
-  TARGET_BRANCH: dev
+  TARGET_BRANCH: ${{ github.head_ref || github.ref_name }}
 
 jobs:
   tests-unit-integration:
@@ -116,7 +116,7 @@ jobs:
           yq -i '.spec.template.spec.containers |= map(.image = strenv(IMG) + ":" + strenv(TAG))' "$DEPLOYMENT_FILE"
           git status --porcelain
 
-      - name: Commit and push manifest change to dev
+      - name: Commit and push manifest change to branch
         run: |
           git config user.name  "ManifestUpdater[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
