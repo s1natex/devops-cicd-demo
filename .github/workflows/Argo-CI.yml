@@ -2,7 +2,7 @@ name: Argo-CI
 
 on:
   push:
-    branches-ignore: [ main ]
+    branches: [ main ]
     paths:
       - 'app/**'
       - 'argo/**'
