@@ -8,24 +8,46 @@ Argo CD continuously syncs the protected `main` branch to the cluster, providing
 ## Features
 - Python Flask “Hello World” app (+ /healthz)
 - Dockerized app + Docker Compose for local run
-- Tests: unit + integration (+ e2e via Docker Compose)
-- Image publishing to Docker Hub with `YYYYMMDD-<shortSHA>` and `latest`
-- Kubernetes manifests (Namespace, Deployment, Service, HPA, readiness/liveness)
+- Tests: unit + integration + e2e (via Docker Compose)
+- Image publishing to Docker Hub with tags:
+  - YYYYMMDD-<shortSHA>
+  - latest
+- Kubernetes manifests:
+  - Namespace
+  - Deployment
+  - Service
+  - HPA
+  - Readiness + Liveness probes
 - Local Kubernetes run with Docker Desktop
-- Scalable deploy: replicas=9 (EKS 3 nodes × ~3 pods)
-- EKS cluster via Terraform (VPC, nodegroup, IRSA enabled)
-- Remote Terraform state (S3 + DynamoDB lock) and GitHub OIDC role
+- Scalable deploy: replicas=9 (EKS: 3 nodes × ~3 pods)
+- EKS cluster provisioned via Terraform:
+  - VPC
+  - Node group
+  - IRSA enabled
+- Remote Terraform state:
+  - S3 backend
+  - DynamoDB lock
+  - GitHub OIDC role for auth
 - CI (GitHub Actions):
-  - Runs on **pull requests to main** (from any branch)
+  - Runs on pull requests to main (from any branch)
   - Executes unit, integration, and e2e tests
   - Branch protection with required checks
-- CD (Argo CD):
+- Argo-CI (GitHub Actions):
+  - Runs build + push of Docker image
+  - Bumps image tag in Kubernetes manifests
+  - Commits changes back to PR branch
+- CD (ArgoCD):
   - Syncs main branch into the cluster
   - Supports App-of-Apps bootstrap pattern
-- Manual CD (alternative via workflow_dispatch with AWS OIDC):
-  - Build → Test → Push → Deploy to EKS
-  - Rollout status check included
-- Monitoring: CloudWatch + Container Insights addon (logs + metrics)
+- Manual CI/CD (workflow_dispatch with AWS OIDC):
+  - Build → Test → Push image to Docker Hub
+  - Apply Kubernetes manifests (Namespace, Deployment, Service)
+  - Update Deployment image with new tag
+  - Wait for rollout to complete
+  - Output Service LoadBalancer hostname
+- Monitoring:
+  - CloudWatch
+  - Container Insights addon (logs + metrics)
 
 ## Instructions and Screenshots:
 #### - [Screenshot Validations](./docs/ScreenshotValidation.md)
