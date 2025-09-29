@@ -1,109 +1,34 @@
-# EKS cluster
+# Hello World to Production: CI/CD + GitOps on AWS EKS
 [![CI](https://github.com/s1natex/devops-cicd-demo/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/s1natex/devops-cicd-demo/actions/workflows/ci.yml)
 
-A Hello World app Containerized and deployed to an EKS Cluster on AWS via automated CI/CD pipeline, featuring main branch protection with ci gate for pull requests
+A "Hello World" app, containerized and deployed to an AWS EKS cluster through an automated CI/CD pipeline
+The pipeline enforces **main branch protection** with a **CI gate on pull requests**, ensuring all tests pass before merge
+Argo CD continuously syncs the protected `main` branch to the cluster, providing secure and reliable GitOps-driven delivery
 
-# ArgoCD
-Used ArgoCD for alternative CICD with an initial Dev ci that builds runs tests push to registry and open pr where ArgoCD syncs with main protected branch
-
-- #### [Argo CI flow Docs](.github/workflows/Argo-CI.md)
-- #### For Legacy CICD activate "protection-to-main" Ruleset
-- #### For ArgoCD activate "ArgoCD-protection-to-main" Ruleset
-
-- ## [Argo CD Apply](./argo/ArgoCD.md)
-- Manually Update the image tag in deployment.yaml for argoCD to sync
-
-# Features
+## Features
 - Python Flask “Hello World” app (+ /healthz)
 - Dockerized app + Docker Compose for local run
-- Tests: unit + integration (+ e2e via Docker)
-- Image publishing to Docker Hub with YYYYMMDD-<shortSHA> and latest
-- Kubernetes manifests (Deployment, Service LoadBalancer, readiness/liveness)
+- Tests: unit + integration (+ e2e via Docker Compose)
+- Image publishing to Docker Hub with `YYYYMMDD-<shortSHA>` and `latest`
+- Kubernetes manifests (Namespace, Deployment, Service, HPA, readiness/liveness)
+- Local Kubernetes run with Docker Desktop
 - Scalable deploy: replicas=9 (EKS 3 nodes × ~3 pods)
 - EKS cluster via Terraform (VPC, nodegroup, IRSA enabled)
 - Remote Terraform state (S3 + DynamoDB lock) and GitHub OIDC role
-- CI (GitHub Actions): unit+integration on PR to main; branch protection with required checks
-- CD (manual workflow_dispatch with AWS OIDC): build - test - push - deploy to EKS, rollout status check
+- CI (GitHub Actions):
+  - Runs on **pull requests to main** (from any branch)
+  - Executes unit, integration, and e2e tests
+  - Branch protection with required checks
+- CD (Argo CD):
+  - Syncs main branch into the cluster
+  - Supports App-of-Apps bootstrap pattern
+- Manual CD (alternative via workflow_dispatch with AWS OIDC):
+  - Build → Test → Push → Deploy to EKS
+  - Rollout status check included
 - Monitoring: CloudWatch + Container Insights addon (logs + metrics)
 
-# Instructions for initial deployment:
-### Terraform Bootstrap Local
-- Run Bootstrap before using AWS to configure OIDC and Remote State with locking and Versioning
-```
-cd terraform/bootstrap
-terraform init
-terraform validate
-terraform fmt
-terraform plan
-terraform apply
-
-# Clean Up
-terraform destroy
-# Check AWS user
-```
-### [K8s EKS LOCAL initial Deployment via AWS](./k8s/EksTest.md)
-- After initial deployment CI/CD handles deployments on any change to main branch
-### EKS Clean Up
-```
-cd terraform/eks
-kubectl delete namespace app
-terraform destroy
-
-cd terraform/bootstrap
-terraform destroy
-# Check AWS user
-```
-# Local Docker Desktop Deployment
-### Terraform Bootstrap Local
-- Run Bootstrap before using AWS
-```
-cd terraform/bootstrap
-terraform init
-terraform validate
-terraform fmt
-terraform plan
-terraform apply
-```
-### [k8s LOCAL testing via Docker Desktop](./k8s/LocalTest.md)
-### OR Local testing via docker compose
-```
-docker compose up --build
-
-# URL: http://localhost:8000
-# Health: http://localhost:8000/healthz
-
-# Clean Up
-docker compose down
-```
-# Screenshot Validation:
-- **ArgoCD Dashboard**
-
-![ArgoCD Dashboard](./media/argocd.png)
-
-- **Terraform Output**
-
-![Terraform Output](./media/terraformoutput.png)
-
-- **Pods and Services output via CLI**
-
-![Pods and Services output via CLI](./media/podssvc.png)
-
-- **Nodes on EKS**
-
-![EKS nodes ready](./media/nodesup.png)
-
-- **LoadBalancerUp**
-
-![LoadBalancerUp](./media/lbup.png)
-
-- **Hello World!**
-
-![Hello!](./media/hello.png)
-
-- **DockerHub Image Tags**
-
-![DockerHub](./media/dockerhubimagetags.png)
-
-- **Cloudwatch**
-
-![Cloudwatch](./media/cloudwatch.png)
+## Instructions and Screenshots:
+#### - [Screenshot Validations](./docs/ScreenshotValidation.md)
+#### - [Running locally with Docker Compose](./docs/dockercompose.md)
+#### - [Running locally with Kubernetes on Docker Desktop](./docs/localcluster.md)
+#### - [Running on AWS EKS cluster with Terraform](./docs/ekscluster.md)
