@@ -1,9 +1,8 @@
 name: Argo-CI
 
 on:
-  pull_request:
-    branches:
-      - main
+  push:
+    branches-ignore: [ main ]
     paths:
       - 'app/**'
       - 'argo/**'
@@ -11,7 +10,7 @@ on:
       - 'terraform/**'
       - 'tests/**'
       - '.github/workflows/**'
-  workflow_dispatch:  # Use outside of Main branch for testing
+  workflow_dispatch:
 
 permissions:
   contents: write
