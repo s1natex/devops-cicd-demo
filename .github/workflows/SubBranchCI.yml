@@ -121,7 +121,7 @@ jobs:
             - Source branch: `${{ github.ref_name }}`
             - Image: `${{ env.IMAGE }}:${{ needs.build_and_push.outputs.TAG }}`
             - File: `${{ env.DEPLOYMENT_FILE }}`
-          branch: ${{ github.ref_name }}   # use the original sub-branch
+          branch: ${{ github.ref_name }}   # use the original sub-branch for pr
           base: main
           add-paths: |
             ${{ env.DEPLOYMENT_FILE }}
