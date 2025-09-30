@@ -3,12 +3,11 @@ name: SubBranchCI
 on:
   push:
     branches-ignore:
-      - main            # run on any branch except main
-      - 'ci/**'         # avoid loops from bot PR branches
+      - main
   workflow_dispatch:
 
 permissions:
-  contents: write       # needed to push a branch / open PR
+  contents: write
   pull-requests: write
 
 concurrency:
@@ -48,7 +47,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       TAG: ${{ steps.meta.outputs.TAG }}
-      BRANCH_SLUG: ${{ steps.meta.outputs.BRANCH_SLUG }}
     steps:
       - uses: actions/checkout@v4
 
@@ -58,12 +56,8 @@ jobs:
         run: |
           DATE=$(date +%Y%m%d)
           SHA=${GITHUB_SHA::7}
-          BRANCH="${GITHUB_REF_NAME}"
-          # sanitize branch for docker tag safety
-          BRANCH_SLUG=$(echo "$BRANCH" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9._-]/-/g' | sed 's/^-*//; s/-*$//' | cut -c1-40)
-          TAG="${BRANCH_SLUG}-${DATE}-${SHA}"
-          echo "TAG=$TAG" >> "$GITHUB_OUTPUT"
-          echo "BRANCH_SLUG=$BRANCH_SLUG" >> "$GITHUB_OUTPUT"
+          BRANCH_SLUG=$(echo "${GITHUB_REF_NAME}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9._-]/-/g' | sed 's/^-*//; s/-*$//' | cut -c1-40)
+          echo "TAG=${BRANCH_SLUG}-${DATE}-${SHA}" >> "$GITHUB_OUTPUT"
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
@@ -77,7 +71,7 @@ jobs:
       - name: Push image
         run: docker push $IMAGE:${{ steps.meta.outputs.TAG }}
 
-  update_manifests_and_pr:
+  update_manifests_commit_only:
     if: ${{ !contains(github.event.head_commit.message, '[skip-subbranchci]') }}
     needs: build_and_push
     runs-on: ubuntu-latest
@@ -85,6 +79,20 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ github.ref }}   # the original sub-branch
+
+      - name: Configure git
+        run: |
+          git config user.name  "ManifestUpdater[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Update local branch (rebase first)
+        run: |
+          git fetch origin "${GITHUB_REF_NAME}"
+          # ensure we're tracking the remote branch and are up to date
+          git checkout -B "${GITHUB_REF_NAME}" "origin/${GITHUB_REF_NAME}"
+          git pull --rebase origin "${GITHUB_REF_NAME}"
 
       - name: Install yq
         run: |
@@ -98,24 +106,21 @@ jobs:
           FILE: ${{ env.DEPLOYMENT_FILE }}
         run: |
           yq -i '.spec.template.spec.containers |= map(.image = strenv(IMG) + ":" + strenv(TAG))' "$FILE"
-          git status --porcelain
 
-      - name: Open PR to main
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "[skip-subbranchci] chore(ci): bump image to ${{ env.IMAGE }}:${{ needs.build_and_push.outputs.TAG }}"
-          title: "SubBranchCI: bump image to ${{ env.IMAGE }}:${{ needs.build_and_push.outputs.TAG }}"
-          body: |
-            Automated update from SubBranchCI.
+      - name: Commit manifest bump (skip CI loop)
+        run: |
+          git add "$DEPLOYMENT_FILE"
+          if git diff --cached --quiet; then
+            echo "No changes to commit"; exit 0
+          fi
+          git commit -m "[skip-subbranchci] chore(k8s): bump image to $IMAGE:${{ needs.build_and_push.outputs.TAG }}"
 
-            - Branch: ${{ needs.build_and_push.outputs.BRANCH_SLUG }}
-            - Image: `${{ env.IMAGE }}:${{ needs.build_and_push.outputs.TAG }}`
-            - File: `${{ env.DEPLOYMENT_FILE }}`
-          branch: ci/bump-${{ needs.build_and_push.outputs.BRANCH_SLUG }}-${{ needs.build_and_push.outputs.TAG }}
-          base: main
-          add-paths: |
-            ${{ env.DEPLOYMENT_FILE }}
-          labels: |
-            ci
-            automated
+      - name: Push back to same branch (retry on race)
+        run: |
+          set -e
+          if git push --no-verify origin "HEAD:${GITHUB_REF_NAME}"; then
+            exit 0
+          fi
+          echo "Push rejected, rebasing onto latest and retrying..."
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          git push --no-verify origin "HEAD:${GITHUB_REF_NAME}"
