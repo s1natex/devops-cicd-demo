@@ -14,7 +14,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  tests-unit-integration:
+  tests-unit-integration-PR:
     # Skip for draft PRs; remove this 'if' to test drafts too
     if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
     runs-on: ubuntu-latest

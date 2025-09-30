@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  tests-unit-integration:
+  tests-unit-integration-main:
     if: ${{ !contains(github.event.head_commit.message, '[skip-mainci]') }}
     runs-on: ubuntu-latest
     steps:
