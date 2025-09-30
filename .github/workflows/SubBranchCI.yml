@@ -83,8 +83,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+        with: { fetch-depth: 0 }
 
       - name: Install yq
         run: |
@@ -100,22 +99,29 @@ jobs:
           yq -i '.spec.template.spec.containers |= map(.image = strenv(IMG) + ":" + strenv(TAG))' "$FILE"
           git status --porcelain
 
-      - name: Open PR to main
+      - name: Commit bump back to the same branch
+        run: |
+          git config user.name  "ManifestUpdater[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$DEPLOYMENT_FILE"
+          if git diff --cached --quiet; then
+            echo "No changes to commit"; exit 0
+          fi
+          git commit -m "[skip-subbranchci] chore(k8s): bump image to $IMAGE:${{ needs.build_and_push.outputs.TAG }}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+
+      - name: Open or update PR from this branch to main
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "[skip-subbranchci] chore(ci): bump image to ${{ env.IMAGE }}:${{ needs.build_and_push.outputs.TAG }}"
-          title: "SubBranchCI: bump image to ${{ env.IMAGE }}:${{ needs.build_and_push.outputs.TAG }}"
+          commit-message: "[skip-subbranchci] chore(k8s): bump image to ${{ env.IMAGE }}:${{ needs.build_and_push.outputs.TAG }}"
+          title: "Bump image: ${{ env.IMAGE }}:${{ needs.build_and_push.outputs.TAG }}"
           body: |
-            Automated update from SubBranchCI.
-
-            - Branch: ${{ needs.build_and_push.outputs.BRANCH_SLUG }}
+            Automated manifest bump from SubBranchCI.
+            - Source branch: `${{ github.ref_name }}`
             - Image: `${{ env.IMAGE }}:${{ needs.build_and_push.outputs.TAG }}`
             - File: `${{ env.DEPLOYMENT_FILE }}`
-          branch: ci/bump-${{ needs.build_and_push.outputs.BRANCH_SLUG }}-${{ needs.build_and_push.outputs.TAG }}
+          branch: ${{ github.ref_name }}   # use the original sub-branch
           base: main
           add-paths: |
             ${{ env.DEPLOYMENT_FILE }}
-          labels: |
-            ci
-            automated
