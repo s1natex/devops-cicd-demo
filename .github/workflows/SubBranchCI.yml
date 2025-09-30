@@ -1,0 +1,121 @@
+name: SubBranchCI
+
+on:
+  push:
+    branches-ignore:
+      - main            # run on any branch except main
+      - 'ci/**'         # avoid loops from bot PR branches
+  workflow_dispatch:
+
+permissions:
+  contents: write       # needed to push a branch / open PR
+  pull-requests: write
+
+concurrency:
+  group: subbranchci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  IMAGE: s1natex/my-devops-cicd-demo
+  DEPLOYMENT_FILE: k8s/deployment.yaml
+
+jobs:
+  tests:
+    if: ${{ !contains(github.event.head_commit.message, '[skip-subbranchci]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: |
+            app/requirements.txt
+            requirements-dev.txt
+
+      - name: Install deps
+        run: pip install -r app/requirements.txt -r requirements-dev.txt
+
+      - name: Unit + Integration tests
+        env:
+          PYTHONPATH: .
+        run: pytest tests/unit tests/integration -q
+
+  build_and_push:
+    if: ${{ !contains(github.event.head_commit.message, '[skip-subbranchci]') }}
+    needs: tests
+    runs-on: ubuntu-latest
+    outputs:
+      TAG: ${{ steps.meta.outputs.TAG }}
+      BRANCH_SLUG: ${{ steps.meta.outputs.BRANCH_SLUG }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compute image tag
+        id: meta
+        shell: bash
+        run: |
+          DATE=$(date +%Y%m%d)
+          SHA=${GITHUB_SHA::7}
+          BRANCH="${GITHUB_REF_NAME}"
+          # sanitize branch for docker tag safety
+          BRANCH_SLUG=$(echo "$BRANCH" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9._-]/-/g' | sed 's/^-*//; s/-*$//' | cut -c1-40)
+          TAG="${BRANCH_SLUG}-${DATE}-${SHA}"
+          echo "TAG=$TAG" >> "$GITHUB_OUTPUT"
+          echo "BRANCH_SLUG=$BRANCH_SLUG" >> "$GITHUB_OUTPUT"
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USER }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build image
+        run: docker build -t $IMAGE:${{ steps.meta.outputs.TAG }} ./app
+
+      - name: Push image
+        run: docker push $IMAGE:${{ steps.meta.outputs.TAG }}
+
+  update_manifests_and_pr:
+    if: ${{ !contains(github.event.head_commit.message, '[skip-subbranchci]') }}
+    needs: build_and_push
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install yq
+        run: |
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/v4.44.3/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+
+      - name: Update deployment image tag
+        env:
+          IMG:  ${{ env.IMAGE }}
+          TAG:  ${{ needs.build_and_push.outputs.TAG }}
+          FILE: ${{ env.DEPLOYMENT_FILE }}
+        run: |
+          yq -i '.spec.template.spec.containers |= map(.image = strenv(IMG) + ":" + strenv(TAG))' "$FILE"
+          git status --porcelain
+
+      - name: Open PR to main
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "[skip-subbranchci] chore(ci): bump image to ${{ env.IMAGE }}:${{ needs.build_and_push.outputs.TAG }}"
+          title: "SubBranchCI: bump image to ${{ env.IMAGE }}:${{ needs.build_and_push.outputs.TAG }}"
+          body: |
+            Automated update from SubBranchCI.
+
+            - Branch: ${{ needs.build_and_push.outputs.BRANCH_SLUG }}
+            - Image: `${{ env.IMAGE }}:${{ needs.build_and_push.outputs.TAG }}`
+            - File: `${{ env.DEPLOYMENT_FILE }}`
+          branch: ci/bump-${{ needs.build_and_push.outputs.BRANCH_SLUG }}-${{ needs.build_and_push.outputs.TAG }}
+          base: main
+          add-paths: |
+            ${{ env.DEPLOYMENT_FILE }}
+          labels: |
+            ci
+            automated
