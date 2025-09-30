@@ -22,6 +22,31 @@ Pull requests to main must pass tests before merge, and Argo CD continuously syn
 - Manual CI/CD workflow (`workflow_dispatch` + AWS OIDC) for on-demand build/deploy
 - Monitoring: CloudWatch + Container Insights (logs + metrics)
 
+## CI/CD Workflow
+```
+Developer pushes to a SubBranch
+SubBranchCI runs:
+  - Runs unit + integration tests
+  - Builds and tags Docker image
+  - Pushes image to Docker Hub
+  - Updates k8s manifest with new image tag
+  - Commits manifest update back to the same branch
+Developer opens a PR from SubBranch to main
+PRCI runs on the PR:
+  - Executes unit + integration tests
+  - Must pass before merge (branch protection)
+Merge to main
+MainCI runs:
+  - Runs unit + integration tests
+  - Runs e2e tests with Docker Compose
+Argo CD syncs:
+  - Watches main branch
+  - Applies updated manifests to EKS
+  - Deploys new image automatically
+Monitoring(AWS):
+  - CloudWatch + Container Insights provide logs and metrics
+```
+
 ## Instructions and Screenshots:
 #### - [Screenshot Validations](./docs/ScreenshotValidation.md)
 #### - [Running locally with Docker Compose](./docs/dockercompose.md)
