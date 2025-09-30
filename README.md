@@ -1,5 +1,7 @@
 # Hello World to Production: CI/CD + GitOps on AWS EKS
 
+![MainCI](https://github.com/s1natex/my-devops-cicd-demo/actions/workflows/MainCI.yml/badge.svg?branch=main)
+
 A "Hello World" app, containerized and deployed to an AWS EKS cluster through an automated CI/CD pipeline
 The pipeline enforces **main branch protection** with a **CI gate on pull requests**, ensuring all tests pass before merge
 Argo CD continuously syncs the protected `main` branch to the cluster, providing secure and reliable GitOps-driven delivery
