@@ -3,12 +3,11 @@ name: SubBranchCI
 on:
   push:
     branches-ignore:
-      - main            # run on any branch except main
-      - 'ci/**'         # avoid loops from bot PR branches
+      - main
   workflow_dispatch:
 
 permissions:
-  contents: write       # needed to push a branch / open PR
+  contents: write
   pull-requests: write
 
 concurrency:
@@ -48,7 +47,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       TAG: ${{ steps.meta.outputs.TAG }}
-      BRANCH_SLUG: ${{ steps.meta.outputs.BRANCH_SLUG }}
     steps:
       - uses: actions/checkout@v4
 
@@ -58,12 +56,8 @@ jobs:
         run: |
           DATE=$(date +%Y%m%d)
           SHA=${GITHUB_SHA::7}
-          BRANCH="${GITHUB_REF_NAME}"
-          # sanitize branch for docker tag safety
-          BRANCH_SLUG=$(echo "$BRANCH" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9._-]/-/g' | sed 's/^-*//; s/-*$//' | cut -c1-40)
-          TAG="${BRANCH_SLUG}-${DATE}-${SHA}"
-          echo "TAG=$TAG" >> "$GITHUB_OUTPUT"
-          echo "BRANCH_SLUG=$BRANCH_SLUG" >> "$GITHUB_OUTPUT"
+          BRANCH_SLUG=$(echo "${GITHUB_REF_NAME}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9._-]/-/g' | sed 's/^-*//; s/-*$//' | cut -c1-40)
+          echo "TAG=${BRANCH_SLUG}-${DATE}-${SHA}" >> "$GITHUB_OUTPUT"
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
@@ -77,13 +71,15 @@ jobs:
       - name: Push image
         run: docker push $IMAGE:${{ steps.meta.outputs.TAG }}
 
-  update_manifests_and_pr:
+  update_manifests_commit_only:
     if: ${{ !contains(github.event.head_commit.message, '[skip-subbranchci]') }}
     needs: build_and_push
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref_name }}
 
       - name: Install yq
         run: |
@@ -99,29 +95,23 @@ jobs:
           yq -i '.spec.template.spec.containers |= map(.image = strenv(IMG) + ":" + strenv(TAG))' "$FILE"
           git status --porcelain
 
-      - name: Commit bump back to the same branch
+      - name: Pull (rebase) to include any new commits
         run: |
           git config user.name  "ManifestUpdater[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin "${GITHUB_REF_NAME}"
+          # rebase to avoid clobbering concurrent pushes to the same branch
+          git rebase "origin/${GITHUB_REF_NAME}" || (git rebase --abort && echo "Rebase failed; will merge instead" && git pull --no-rebase --no-edit origin "${GITHUB_REF_NAME}")
+
+      - name: Commit manifest bump
+        run: |
           git add "$DEPLOYMENT_FILE"
           if git diff --cached --quiet; then
             echo "No changes to commit"; exit 0
           fi
           git commit -m "[skip-subbranchci] chore(k8s): bump image to $IMAGE:${{ needs.build_and_push.outputs.TAG }}"
-          git push origin "HEAD:${GITHUB_REF_NAME}"
 
-      - name: Open or update PR from this branch to main
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "[skip-subbranchci] chore(k8s): bump image to ${{ env.IMAGE }}:${{ needs.build_and_push.outputs.TAG }}"
-          title: "Bump image: ${{ env.IMAGE }}:${{ needs.build_and_push.outputs.TAG }}"
-          body: |
-            Automated manifest bump from SubBranchCI.
-            - Source branch: `${{ github.ref_name }}`
-            - Image: `${{ env.IMAGE }}:${{ needs.build_and_push.outputs.TAG }}`
-            - File: `${{ env.DEPLOYMENT_FILE }}`
-          branch: ${{ github.ref_name }}   # use the original sub-branch for pr
-          base: main
-          add-paths: |
-            ${{ env.DEPLOYMENT_FILE }}
+      - name: Push back to same branch
+        run: |
+          # Use --force-with-lease only if rebase occurred; safe-guard against overwriting others
+          git push --no-verify origin "HEAD:${GITHUB_REF_NAME}" || git push --force-with-lease origin "HEAD:${GITHUB_REF_NAME}"
