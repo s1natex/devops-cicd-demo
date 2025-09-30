@@ -2,53 +2,25 @@
 
 ![MainCI](https://github.com/s1natex/my-devops-cicd-demo/actions/workflows/MainCI.yml/badge.svg?branch=main)
 
-A "Hello World" app, containerized and deployed to an AWS EKS cluster through an automated CI/CD pipeline
-The pipeline enforces **main branch protection** with a **CI gate on pull requests**, ensuring all tests pass before merge
-Argo CD continuously syncs the protected `main` branch to the cluster, providing secure and reliable GitOps-driven delivery
+A "Hello World" app, containerized and deployed to AWS EKS via a CI/CD pipeline.
+Pull requests to main must pass tests before merge, and Argo CD continuously syncs main to the cluster for secure, GitOps-driven delivery
 
 ## Features
-- Python Flask “Hello World” app (+ /healthz)
-- Dockerized app + Docker Compose for local run
-- Tests: unit + integration + e2e (via Docker Compose)
-- Image publishing to Docker Hub with tags:
-  - `YYYYMMDD-<shortSHA>`
-  - latest
-- Kubernetes manifests:
-  - Namespace
-  - Deployment
-  - Service
-  - HPA
-  - Readiness + Liveness probes
-- Local Kubernetes run with Docker Desktop
-- Scalable deploy: replicas=9 (EKS: 3 nodes × ~3 pods)
-- EKS cluster provisioned via Terraform:
-  - VPC
-  - Node group
-  - IRSA enabled
-- Remote Terraform state:
-  - S3 backend
-  - DynamoDB lock
-  - GitHub OIDC role for auth
-- CI (GitHub Actions):
-  - Runs on pull requests to main (from any branch)
-  - Executes unit, integration, and e2e tests
-  - Branch protection with required checks
-- Argo-CI (GitHub Actions):
-  - Runs build + push of Docker image
-  - Bumps image tag in Kubernetes manifests
-  - Commits changes back to PR branch
-- CD (ArgoCD):
-  - Syncs main branch into the cluster
-  - Supports App-of-Apps bootstrap pattern
-- Manual CI/CD (workflow_dispatch with AWS OIDC):
-  - Build → Test → Push image to Docker Hub
-  - Apply Kubernetes manifests (Namespace, Deployment, Service)
-  - Update Deployment image with new tag
-  - Wait for rollout to complete
-  - Output Service LoadBalancer hostname
-- Monitoring:
-  - CloudWatch
-  - Container Insights addon (logs + metrics)
+- Python Flask “Hello World” app (+ `/healthz`)
+- Containerized with Docker; local run via Docker Compose
+- Automated tests: unit, integration, e2e (with Docker Compose)
+- Docker Hub image publishing with versioned (`YYYYMMDD-<shortSHA>`) and `latest` tags
+- Kubernetes manifests: Namespace, Deployment, Service, HPA, Probes
+- EKS cluster provisioned via Terraform (VPC, Node group, IRSA, remote state in S3+DynamoDB, GitHub OIDC auth)
+- GitHub Actions CI:
+  - Sub-branch CI builds, pushes image, updates manifests, opens PR to `main`
+  - PR CI runs tests on pull requests to `main`
+  - Main CI runs full test suite after merges to `main`
+- Argo CD:
+  - Continuously syncs protected `main` branch to EKS
+  - GitOps-driven, secure delivery
+- Manual CI/CD workflow (`workflow_dispatch` + AWS OIDC) for on-demand build/deploy
+- Monitoring: CloudWatch + Container Insights (logs + metrics)
 
 ## Instructions and Screenshots:
 #### - [Screenshot Validations](./docs/ScreenshotValidation.md)
