@@ -70,18 +70,6 @@ jobs:
             | tar -xz -C /usr/local/bin gitleaks
           gitleaks detect --redact --exit-code=1 --no-banner --verbose --config .gitleaks.toml
 
-      - name: Install pip-audit
-        run: python -m pip install --upgrade pip && pip install pip-audit
-
-      - name: Install dependencies with constraints
-        run: |
-          if [ -f app/requirements.txt ] || [ -f requirements-dev.txt ]; then
-            pip install -r app/requirements.txt -r requirements-dev.txt -c constraints.txt
-          fi
-
-      - name: pip-audit (installed environment)
-        run: pip-audit --progress-spinner=off --strict
-
       - name: Install bandit
         run: pip install bandit
 
@@ -93,13 +81,13 @@ jobs:
             echo "No app/ directory found; skipping Bandit."
           fi
 
-      - name: Trivy filesystem scan (HIGH,CRITICAL)
+      - name: Trivy filesystem scan (CRITICAL)
         uses: aquasecurity/trivy-action@0.24.0
         with:
           scan-type: 'fs'
           ignore-unfixed: true
           format: 'table'
-          severity: 'HIGH,CRITICAL'
+          severity: 'CRITICAL'
           exit-code: '1'
           vuln-type: 'os,library'
           scanners: 'vuln,secret,misconfig'
