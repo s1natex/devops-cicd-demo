@@ -19,7 +19,7 @@ Pull requests to main must pass tests before merge, and Argo CD continuously syn
     - Runs Terraform fmt/validate/plan when terraform/ changes
     - Builds & pushes image only if app/ or docker-compose.yml changed
     - Updates k8s manifest with new tag and commits back when Build & push job succeeds
-  - PRCI: on PRs to main → runs unit/integration tests + security scans (Gitleaks, pip-audit, Bandit, Trivy)
+  - PRCI: on PRs to main → runs unit/integration tests + security scans (Gitleaks, Bandit, Trivy)
 - GitOps with Argo CD:
   - App-of-Apps pattern (root + hello application)
   - Automated sync (prune + self-heal) of main branch to EKS or Docker Desktop(local)
