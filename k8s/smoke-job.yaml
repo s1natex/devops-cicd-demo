@@ -1,0 +1,39 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: hello-smoke
+  namespace: app
+  annotations:
+    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded,HookFailed
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: smoke
+          image: curlimages/curl:8.10.1
+          args:
+            - /bin/sh
+            - -ceu
+            - |
+              set -o pipefail
+              URL="${SMOKE_URL}"
+              echo "Smoke testing ${URL}"
+              # wait up to ~60s for readiness
+              for i in $(seq 1 30); do
+                if curl -fsS "${URL}" >/dev/null; then
+                  echo "OK: endpoint responded"
+                  exit 0
+                fi
+                echo "Waiting... ($i/30)"
+                sleep 2
+              done
+              echo "ERROR: endpoint not ready in time"
+              exit 1
+          env:
+            # Service is hello-svc on port 80 mapping to pod 8000
+            - name: SMOKE_URL
+              value: "http://hello-svc.app.svc.cluster.local/healthz"
