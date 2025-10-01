@@ -1,0 +1,93 @@
+name: PRCI
+
+on:
+  pull_request:
+    branches: [ main ]
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+concurrency:
+  group: prci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests-unit-integration-PR:
+    # Skip for draft PRs; remove this 'if' to test drafts too
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: |
+            app/requirements.txt
+            requirements-dev.txt
+
+      - name: Install dependencies
+        run: pip install -r app/requirements.txt -r requirements-dev.txt
+
+      - name: Run unit + integration tests
+        env:
+          PYTHONPATH: .
+        run: pytest tests/unit tests/integration -q
+
+  security-sast:
+    name: SAST & Security (basic)
+    # run on non-draft PRs
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Gitleaks secrets scan
+        uses: zricethezav/gitleaks-action@v2.2.0
+        with:
+          args: detect --no-banner --redact --verbose
+
+      - name: Install pip-audit
+        run: python -m pip install --upgrade pip && pip install pip-audit
+
+      - name: pip-audit (requirements files)
+        run: |
+          if [ -f app/requirements.txt ]; then
+            pip-audit -r app/requirements.txt --progress-spinner=off --strict
+          fi
+          if [ -f requirements-dev.txt ]; then
+            pip-audit -r requirements-dev.txt --progress-spinner=off --strict
+          fi
+
+      - name: Install bandit
+        run: pip install bandit
+
+      - name: Bandit scan (app/)
+        run: |
+          if [ -d app ]; then
+            bandit -r app -x app/tests -q
+          else
+            echo "No app/ directory found; skipping Bandit."
+          fi
+
+      - name: Trivy filesystem scan (HIGH,CRITICAL)
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          scan-type: 'fs'
+          ignore-unfixed: true
+          format: 'table'
+          severity: 'HIGH,CRITICAL'
+          exit-code: '1'
+          vuln-type: 'os,library'
+          scanners: 'vuln,secret,misconfig'
+          skip-dirs: 'tests'
