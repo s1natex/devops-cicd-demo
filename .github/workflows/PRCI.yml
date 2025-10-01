@@ -40,19 +40,22 @@ jobs:
         run: pytest tests/unit tests/integration -q
 
   security-sast:
-    # run on non-draft PRs
     if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # needed for gitleaks on PRs
 
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
       - name: Gitleaks secrets scan
-        uses: zricethezav/gitleaks-action@v2.2.0
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           args: detect --no-banner --redact --verbose
 
