@@ -124,6 +124,12 @@ git push origin dev
 # Then create a Pull Request from dev → main
 # The CI workflow will validate and Argo CD will sync after merge
 ```
+
+### For Rollback if smoke-job fails after ArgoCD deployment
+```
+kubectl -n app rollout undo deployment/hello
+```
+
 ### 19. Clean up app and Argo CD
 ```
 kubectl delete namespace app --wait=false || true
@@ -141,3 +147,16 @@ terraform destroy
 cd ../bootstrap
 terraform destroy
 ```
+
+For addresses
+# ArgoCD dashboard
+kubectl -n argocd get ingress argocd \
+  -o jsonpath='{.status.loadBalancer.ingress[0].hostname}{"\n"}{.status.loadBalancer.ingress[0].ip}{"\n"}'
+
+# App root
+kubectl -n app get ingress hello \
+  -o jsonpath='{.status.loadBalancer.ingress[0].hostname}{"\n"}{.status.loadBalancer.ingress[0].ip}{"\n"}'
+
+# Healthz (same ingress, just append /healthz)
+kubectl -n app get ingress hello \
+  -o jsonpath='{.status.loadBalancer.ingress[0].hostname}{"\n"}{.status.loadBalancer.ingress[0].ip}{"\n"}'
