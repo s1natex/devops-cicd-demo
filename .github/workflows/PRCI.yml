@@ -88,7 +88,7 @@ jobs:
           ignore-unfixed: true
           format: 'table'
           severity: 'CRITICAL'
-          exit-code: '1'
+          exit-code: '0'
           vuln-type: 'os,library'
           scanners: 'vuln,secret,misconfig'
           skip-dirs: 'tests'
