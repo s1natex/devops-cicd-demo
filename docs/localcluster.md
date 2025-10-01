@@ -68,9 +68,8 @@ kubectl -n argocd port-forward svc/argocd-server 8081:443 &
 #### Argo CD URL:
 ```
 https://localhost:8081
-```
+
 ### Default login:
-```
 # username: admin
 # password: $(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d)
 ```
@@ -97,29 +96,30 @@ git push origin dev
 # Then create a Pull Request from dev → main
 # The CI workflow will validate and Argo CD will sync after merge
 ```
-
 ### For Rollback if smoke-job fails after ArgoCD deployment
 ```
 kubectl -n app rollout undo deployment/hello
 ```
-
-### 15. Clean up
+### 15. Get Ingress Addresses (ArgoCD, App, Healthz)
+## ArgoCD dashboard
+```
+kubectl -n argocd get ingress argocd \
+  -o jsonpath='{.status.loadBalancer.ingress[0].hostname}{"\n"}{.status.loadBalancer.ingress[0].ip}{"\n"}'
+```
+## App root
+```
+kubectl -n app get ingress hello \
+  -o jsonpath='{.status.loadBalancer.ingress[0].hostname}{"\n"}{.status.loadBalancer.ingress[0].ip}{"\n"}'
+```
+## Healthz (same ingress, just append /healthz)
+```
+kubectl -n app get ingress hello \
+  -o jsonpath='{.status.loadBalancer.ingress[0].hostname}{"\n"}{.status.loadBalancer.ingress[0].ip}{"\n"}'
+```
+### 16. Clean up
 ```
 kubectl -n argocd delete application --all || true
 kubectl -n argocd delete -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml || true
 kubectl delete namespace argocd --wait=false || true
 kubectl delete namespace app --wait=false || true
 ```
-
-For addresses
-# ArgoCD dashboard
-kubectl -n argocd get ingress argocd \
-  -o jsonpath='{.status.loadBalancer.ingress[0].hostname}{"\n"}{.status.loadBalancer.ingress[0].ip}{"\n"}'
-
-# App root
-kubectl -n app get ingress hello \
-  -o jsonpath='{.status.loadBalancer.ingress[0].hostname}{"\n"}{.status.loadBalancer.ingress[0].ip}{"\n"}'
-
-# Healthz (same ingress, just append /healthz)
-kubectl -n app get ingress hello \
-  -o jsonpath='{.status.loadBalancer.ingress[0].hostname}{"\n"}{.status.loadBalancer.ingress[0].ip}{"\n"}'

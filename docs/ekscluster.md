@@ -54,9 +54,8 @@ kubectl -n app rollout status deploy/hello
 ```
 EXTERNAL_DNS=$(kubectl -n app get svc hello-svc -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
 echo $EXTERNAL_DNS
-```
+
 # Test endpoints
-```
 curl -s "http://$EXTERNAL_DNS/"
 curl -s -o /dev/null -w "%{http_code}\n" "http://$EXTERNAL_DNS/healthz"
 ```
@@ -124,31 +123,12 @@ git push origin dev
 # Then create a Pull Request from dev → main
 # The CI workflow will validate and Argo CD will sync after merge
 ```
-
 ### For Rollback if smoke-job fails after ArgoCD deployment
 ```
 kubectl -n app rollout undo deployment/hello
 ```
-
-### 19. Clean up app and Argo CD
+### 19. Get Ingress Addresses (ArgoCD, App, Healthz)
 ```
-kubectl delete namespace app --wait=false || true
-kubectl -n argocd delete application --all || true
-kubectl -n argocd delete -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml || true
-kubectl delete namespace argocd --wait=false || true
-```
-### 20. Destroy EKS cluster with Terraform
-```
-cd terraform/eks
-terraform destroy
-```
-### 21. Destroy bootstrap resources
-```
-cd ../bootstrap
-terraform destroy
-```
-
-For addresses
 # ArgoCD dashboard
 kubectl -n argocd get ingress argocd \
   -o jsonpath='{.status.loadBalancer.ingress[0].hostname}{"\n"}{.status.loadBalancer.ingress[0].ip}{"\n"}'
@@ -160,3 +140,21 @@ kubectl -n app get ingress hello \
 # Healthz (same ingress, just append /healthz)
 kubectl -n app get ingress hello \
   -o jsonpath='{.status.loadBalancer.ingress[0].hostname}{"\n"}{.status.loadBalancer.ingress[0].ip}{"\n"}'
+```
+### 20. Clean up app and Argo CD
+```
+kubectl delete namespace app --wait=false || true
+kubectl -n argocd delete application --all || true
+kubectl -n argocd delete -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml || true
+kubectl delete namespace argocd --wait=false || true
+```
+### 21. Destroy EKS cluster with Terraform
+```
+cd terraform/eks
+terraform destroy
+```
+### 22. Destroy bootstrap resources
+```
+cd ../bootstrap
+terraform destroy
+```
