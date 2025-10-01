@@ -1,0 +1,3 @@
+[allowlist]
+description = "Ignore detect-secrets baseline"
+files = ['^\.secrets\.baseline$']
