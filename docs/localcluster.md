@@ -100,21 +100,31 @@ git push origin dev
 ```
 kubectl -n app rollout undo deployment/hello
 ```
-### 15. Get Ingress Addresses (ArgoCD, App, Healthz)
+### 15. Apply and Get Ingress Addresses (ArgoCD, App, Healthz)
+```
+# Install Ingress Controller
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.11.1/deploy/static/provider/cloud/deploy.yaml
+kubectl -n ingress-nginx rollout status deploy/ingress-nginx-controller
+
+# Apply the ingress manifests
+kubectl apply -f k8s/ingress-argocd.yaml
+kubectl apply -f k8s/ingress-app.yaml
+
+# Watch until the controller assigns an address/hostname
+kubectl -n argocd get ingress argocd -w
+kubectl -n app    get ingress hello  -w
+```
 ## ArgoCD dashboard
 ```
-kubectl -n argocd get ingress argocd \
-  -o jsonpath='{.status.loadBalancer.ingress[0].hostname}{"\n"}{.status.loadBalancer.ingress[0].ip}{"\n"}'
+https://argocd.127.0.0.1.nip.io
 ```
 ## App root
 ```
-kubectl -n app get ingress hello \
-  -o jsonpath='{.status.loadBalancer.ingress[0].hostname}{"\n"}{.status.loadBalancer.ingress[0].ip}{"\n"}'
+http://localhost/
 ```
 ## Healthz (same ingress, just append /healthz)
 ```
-kubectl -n app get ingress hello \
-  -o jsonpath='{.status.loadBalancer.ingress[0].hostname}{"\n"}{.status.loadBalancer.ingress[0].ip}{"\n"}'
+http://localhost/Healthz
 ```
 ### 16. Clean up
 ```

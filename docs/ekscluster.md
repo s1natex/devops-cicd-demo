@@ -127,19 +127,41 @@ git push origin dev
 ```
 kubectl -n app rollout undo deployment/hello
 ```
-### 19. Get Ingress Addresses (ArgoCD, App, Healthz)
+### 19. Apply and Get Ingress Addresses (ArgoCD, App, Healthz)
 ```
-# ArgoCD dashboard
-kubectl -n argocd get ingress argocd \
-  -o jsonpath='{.status.loadBalancer.ingress[0].hostname}{"\n"}{.status.loadBalancer.ingress[0].ip}{"\n"}'
+# Install AWS Load Balancer Controller
+kubectl apply -k "github.com/aws/eks-charts/stable/aws-load-balancer-controller//crds?ref=master"
+helm repo add eks https://aws.github.io/eks-charts
+helm repo update
+helm upgrade -i aws-load-balancer-controller eks/aws-load-balancer-controller \
+  -n kube-system \
+  --set clusterName=my-devops-cicd-demo-eks \
+  --set serviceAccount.create=false \
+  --set serviceAccount.name=aws-load-balancer-controller
 
-# App root
-kubectl -n app get ingress hello \
-  -o jsonpath='{.status.loadBalancer.ingress[0].hostname}{"\n"}{.status.loadBalancer.ingress[0].ip}{"\n"}'
+# Apply the ingress manifests
+kubectl apply -n argocd -f k8s/ingress-argocd.yaml
+kubectl apply -n app    -f k8s/ingress-app.yaml
 
-# Healthz (same ingress, just append /healthz)
-kubectl -n app get ingress hello \
-  -o jsonpath='{.status.loadBalancer.ingress[0].hostname}{"\n"}{.status.loadBalancer.ingress[0].ip}{"\n"}'
+# Ensure ALB ingress class is set
+kubectl -n argocd annotate ingress argocd kubernetes.io/ingress.class=alb --overwrite
+kubectl -n app    annotate ingress hello  kubernetes.io/ingress.class=alb --overwrite
+
+# Watch until AWS ALB hostnames are assigned
+kubectl -n argocd get ingress argocd -w
+kubectl -n app    get ingress hello  -w
+
+ARGO_ALB=$(kubectl -n argocd get ingress argocd -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+APP_ALB=$(kubectl -n app    get ingress hello  -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+
+echo "ArgoCD dashboard:"
+echo "https://$ARGO_ALB"
+
+echo "App root:"
+echo "http://$APP_ALB/"
+
+echo "Healthz:"
+echo "http://$APP_ALB/healthz"
 ```
 ### 20. Clean up app and Argo CD
 ```

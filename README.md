@@ -1,14 +1,14 @@
 # Hello World to Production: CI/CD + GitOps on AWS EKS
 
 A "Hello World" app, containerized and deployed to AWS EKS via a GitOps Driven CI/CD pipeline
-Pull requests to main must pass tests before merge, and Argo CD continuously syncs main to the cluster for secure, GitOps-driven delivery
+Pull requests to main must pass tests before merge, and Argo CD continuously syncs main to the cluster for secure GitOps delivery
 
 ## Features
 - Python Flask “Hello World” app with `/healthz` endpoint
 - Containerized with Docker; runnable locally via Docker Compose
 - Automated tests: unit, integration, end-to-end (Docker Compose for e2e)
 - Docker Hub publishing: versioned tags (YYYYMMDD-<shortSHA>) + latest
-- Kubernetes manifests (flat in k8s/): Namespace, Deployment, Service, HPA, readiness/liveness probes
+- Kubernetes manifests (flat in k8s/): Namespace, Deployment, Service, HPA, readiness and liveness probes
 - Terraform:
   - Bootstrap: S3 bucket + DynamoDB for remote state
   - EKS cluster: VPC, node group, IRSA
