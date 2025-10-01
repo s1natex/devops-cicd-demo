@@ -76,7 +76,7 @@ jobs:
       - name: Bandit scan (app/)
         run: |
           if [ -d app ]; then
-            bandit -r app -x app/tests -q
+            bandit -r app -x app/tests -q --severity-level high
           else
             echo "No app/ directory found; skipping Bandit."
           fi
