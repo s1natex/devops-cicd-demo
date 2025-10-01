@@ -1,14 +1,14 @@
 # Hello World to Production: CI/CD + GitOps on AWS EKS
 
-A `Hello World` app, containerized and deployed to `AWS EKS` via a GitOps Driven CI/CD pipeline
-Pull requests to `main` must pass tests before merge, and Argo CD continuously syncs main to the cluster for secure GitOps delivery
+- A `Hello World` app, containerized and deployed to `AWS EKS` via a GitOps Driven CI/CD pipeline
+- Pull requests to `main` must pass tests before merge, and Argo CD continuously syncs main to the cluster for secure GitOps delivery
 
 ## Features
 - Python Flask “Hello World” app with `/healthz` endpoint
-- Containerized with Docker; runnable locally via Docker Compose
-- Automated tests: unit, integration, end-to-end (Docker Compose for e2e)
+- Containerized with Docker, runnable locally via Docker Compose
+- Automated tests: `unit`, `integration`, `end-to-end` (Docker Compose for e2e)
 - Docker Hub publishing: versioned tags (YYYYMMDD-SHA)
-- Kubernetes manifests (flat in k8s/): Namespace, Deployment, Service, HPA, readiness and liveness probes
+- Kubernetes manifests (flat in k8s/): `Namespace`, `Deployment`, `Service`, `HPA`, `readiness` and `liveness` probes
 - Terraform:
   - Bootstrap: S3 bucket + DynamoDB for remote state
   - EKS cluster: VPC, node group, IRSA
@@ -22,7 +22,7 @@ Pull requests to `main` must pass tests before merge, and Argo CD continuously s
   - PRCI: on PRs to `main` → runs unit/integration tests + security scans (Gitleaks, Bandit, Trivy)
 - GitOps with Argo CD:
   - App-of-Apps pattern (root + hello application)
-  - Automated sync (prune + self-heal) of `main` branch to EKS or Docker Desktop(local)
+  - Automated sync (prune + self-heal) of `main` branch to `EKS` or `Docker Desktop(local)`
   - PostSync smoke-test Job probes `/healthz` via Service to gate rollouts
   - Rollback: `kubectl rollout undo` or `argocd app rollback`
 - Ingress:
