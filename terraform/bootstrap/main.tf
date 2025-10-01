@@ -80,52 +80,58 @@ resource "aws_dynamodb_table" "tf_lock" {
   }
 }
 
-# --- GitHub OIDC provider for Actions ---
-resource "aws_iam_openid_connect_provider" "github" {
-  url = "https://token.actions.githubusercontent.com"
+# --------------------------------------------------------------------
+# OIDC-related configuration for GitHub Actions
+# --------------------------------------------------------------------
 
-  client_id_list = ["sts.amazonaws.com"]
+# GitHub OIDC identity provider
+# resource "aws_iam_openid_connect_provider" "github" {
+#   url = "https://token.actions.githubusercontent.com"
 
-  # Current thumbprint for token.actions.githubusercontent.com
-  thumbprint_list = ["6938fd4d98bab03faadb97b34396831e3780aea1"]
-}
+#   client_id_list = ["sts.amazonaws.com"]
 
-# --- IAM Role assumed by GitHub Actions via OIDC ---
-data "aws_iam_policy_document" "gha_assume_role" {
-  statement {
-    actions = ["sts:AssumeRoleWithWebIdentity"]
-    effect  = "Allow"
+#   # Current thumbprint for token.actions.githubusercontent.com
+#   thumbprint_list = ["6938fd4d98bab03faadb97b34396831e3780aea1"]
+# }
 
-    principals {
-      type        = "Federated"
-      identifiers = [aws_iam_openid_connect_provider.github.arn]
-    }
+# # IAM policy document to allow GitHub Actions to assume role via OIDC
+# data "aws_iam_policy_document" "gha_assume_role" {
+#   statement {
+#     actions = ["sts:AssumeRoleWithWebIdentity"]
+#     effect  = "Allow"
 
-    condition {
-      test     = "StringEquals"
-      variable = "token.actions.githubusercontent.com:aud"
-      values   = ["sts.amazonaws.com"]
-    }
+#     principals {
+#       type        = "Federated"
+#       identifiers = [aws_iam_openid_connect_provider.github.arn]
+#     }
 
-    condition {
-      test     = "StringLike"
-      variable = "token.actions.githubusercontent.com:sub"
-      values = concat(
-        [for b in var.allowed_branches : "repo:${local.repo_full}:ref:refs/heads/${b}"],
-        ["repo:${local.repo_full}:ref:refs/tags/*"]
-      )
-    }
-  }
-}
+#     condition {
+#       test     = "StringEquals"
+#       variable = "token.actions.githubusercontent.com:aud"
+#       values   = ["sts.amazonaws.com"]
+#     }
 
-resource "aws_iam_role" "gha_oidc_role" {
-  name                 = "${var.project}-gha-oidc"
-  assume_role_policy   = data.aws_iam_policy_document.gha_assume_role.json
-  description          = "Role assumed by GitHub Actions via OIDC for ${local.repo_full}"
-  max_session_duration = 3600
-}
+#     condition {
+#       test     = "StringLike"
+#       variable = "token.actions.githubusercontent.com:sub"
+#       values = concat(
+#         [for b in var.allowed_branches : "repo:${local.repo_full}:ref:refs/heads/${b}"],
+#         ["repo:${local.repo_full}:ref:refs/tags/*"]
+#       )
+#     }
+#   }
+# }
 
-resource "aws_iam_role_policy_attachment" "gha_poweruser" {
-  role       = aws_iam_role.gha_oidc_role.name
-  policy_arn = var.role_policy_arn
-}
+# # IAM Role assumed by GitHub Actions using the OIDC provider
+# resource "aws_iam_role" "gha_oidc_role" {
+#   name                 = "${var.project}-gha-oidc"
+#   assume_role_policy   = data.aws_iam_policy_document.gha_assume_role.json
+#   description          = "Role assumed by GitHub Actions via OIDC for ${local.repo_full}"
+#   max_session_duration = 3600
+# }
+
+# # Attach a policy (e.g., PowerUser or custom) to the OIDC role
+# resource "aws_iam_role_policy_attachment" "gha_poweruser" {
+#   role       = aws_iam_role.gha_oidc_role.name
+#   policy_arn = var.role_policy_arn
+# }

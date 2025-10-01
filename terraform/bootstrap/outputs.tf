@@ -8,15 +8,15 @@ output "lock_table" {
   description = "DynamoDB table for state locking"
 }
 
-output "github_oidc_provider_arn" {
-  value       = aws_iam_openid_connect_provider.github.arn
-  description = "OIDC provider ARN for GitHub"
-}
+# output "github_oidc_provider_arn" {
+#   value       = aws_iam_openid_connect_provider.github.arn
+#   description = "OIDC provider ARN for GitHub"
+# }
 
-output "github_actions_role_arn" {
-  value       = aws_iam_role.gha_oidc_role.arn
-  description = "IAM role ARN for GitHub Actions"
-}
+# output "github_actions_role_arn" {
+#   value       = aws_iam_role.gha_oidc_role.arn
+#   description = "IAM role ARN for GitHub Actions"
+# }
 
 output "backend_hcl_example" {
   value       = <<EOT
