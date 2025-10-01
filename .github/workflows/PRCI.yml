@@ -40,7 +40,6 @@ jobs:
         run: pytest tests/unit tests/integration -q
 
   security-sast:
-    name: SAST & Security (basic)
     # run on non-draft PRs
     if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
     runs-on: ubuntu-latest
