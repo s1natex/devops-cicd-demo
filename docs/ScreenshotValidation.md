@@ -1,7 +1,7 @@
 # Screenshot Validation:
 - **ArgoCD Dashboard**
 
-![ArgoCD Dashboard](../media/argocd.png)
+![ArgoCD Dashboard](../media/argodashboard.png)
 
 - **Terraform Output**
 
