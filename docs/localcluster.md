@@ -3,7 +3,7 @@
 ### 1. Enable Kubernetes in Docker Desktop
 - Open Docker Desktop settings → **Kubernetes**
 - Check **Enable Kubernetes** and apply changes
-- Wait until the status bar shows Kubernetes is running
+- Wait until the status bar shows **Kubernetes** is running
 
 ### 2. Verify kubectl is available
 ```
@@ -28,7 +28,7 @@ kubectl -n app rollout status deploy/hello
 kubectl -n app get pods -o wide
 kubectl -n app get svc hello-svc
 ```
-### 6. Access the app
+### 6. Access the app with Port Forwarding
 #### Port-forward
 ```
 kubectl -n app port-forward svc/hello-svc 8080:80 &
@@ -61,7 +61,7 @@ kubectl -n argocd rollout status statefulset/argocd-application-controller
 kubectl -n argocd describe statefulset argocd-application-controller
 kubectl -n argocd logs statefulset/argocd-application-controller -c argocd-application-controller
 ```
-### 10. Port-forward Argo CD UI
+### 10. Port-forward Argo CD UI with Port Forwarding
 ```
 kubectl -n argocd port-forward svc/argocd-server 8081:443 &
 ```
@@ -73,11 +73,11 @@ https://localhost:8081
 # username: admin
 # password: $(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d)
 ```
-### 11. Bootstrap apps with App-of-Apps pattern
+### 11. Bootstrap Apps with app-of-apps pattern
 ```
 kubectl apply -f argo/app-of-apps.yaml
 ```
-### 12. Update and apply example app
+### 12. Update and Apply the app
 ```
 kubectl apply -f argo/apps/hello.yaml
 ```
@@ -88,13 +88,16 @@ kubectl -n argocd get pods -n app
 ```
 ### 14. Commit manifest changes to dev branch and open PR to main
 ```
-git checkout dev
+# Create new <SubBranch-name>
+git switch <SubBranch-name>
 git add k8s/deployment.yaml
 git commit -m "chore: bump image version for hello app"
-git push origin dev
+git push origin <SubBranch-name>
 
-# Then create a Pull Request from dev → main
-# The CI workflow will validate and Argo CD will sync after merge
+# The CI workflow will validate on push
+# Then create a Pull Request from <SubBranch-name> → main
+# The PRCI workflow will validate the PR and Merge
+# Argo CD will sync after merge with auto PostSync healthchecks
 ```
 ### For Rollback if smoke-job fails after ArgoCD deployment
 ```
@@ -114,15 +117,15 @@ kubectl apply -f k8s/ingress-app.yaml
 kubectl -n argocd get ingress argocd -w
 kubectl -n app    get ingress hello  -w
 ```
-## ArgoCD dashboard
+## ArgoCD
 ```
 https://argocd.127.0.0.1.nip.io
 ```
-## App root
+## App
 ```
 http://localhost/
 ```
-## Healthz (same ingress, just append /healthz)
+## Healthz
 ```
 http://localhost/Healthz
 ```

@@ -104,7 +104,7 @@ kubectl -n argocd get svc argocd-server
 ```
 kubectl apply -f argo/app-of-apps.yaml
 ```
-### 16. Update and apply example app
+### 16. Update and apply App
 ```
 kubectl apply -f argo/apps/hello.yaml
 ```
@@ -115,13 +115,16 @@ kubectl -n argocd get pods -n app
 ```
 ### 18. Commit manifest changes to dev branch and open PR to main
 ```
-git checkout dev
+# Create new <SubBranch-name>
+git switch <SubBranch-name>
 git add k8s/deployment.yaml
 git commit -m "chore: bump image version for hello app"
-git push origin dev
+git push origin <SubBranch-name>
 
-# Then create a Pull Request from dev → main
-# The CI workflow will validate and Argo CD will sync after merge
+# The CI workflow will validate on push
+# Then create a Pull Request from <SubBranch-name> → main
+# The PRCI workflow will validate the PR and Merge
+# Argo CD will sync after merge with auto PostSync healthchecks
 ```
 ### For Rollback if smoke-job fails after ArgoCD deployment
 ```
