@@ -1,4 +1,4 @@
-# How to Run the Project on EKS (AWS) with Terraform + Argo CD
+# How to Run the Project on EKS (AWS) with Terraform + ArgoCD
 
 ### 1. Prerequisites
 - AWS CLI configured with correct credentials

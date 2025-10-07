@@ -1,4 +1,4 @@
-# How to Run the Project with Kubernetes (Docker Desktop) + Argo CD
+# How to Run the Project with Kubernetes (Docker Desktop) + ArgoCD
 
 ### 1. Enable Kubernetes in Docker Desktop
 - Open Docker Desktop settings → **Kubernetes**

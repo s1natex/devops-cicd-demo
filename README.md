@@ -1,7 +1,7 @@
 # Hello World to Production: CI/CD + GitOps on AWS EKS
 
-- A `Hello World` app, containerized and deployed to `AWS EKS` via a GitOps Driven CI/CD pipeline
-- Pull requests to `main` must pass tests before merge, and Argo CD continuously syncs `main` to the cluster for a secure GitOps delivery
+- A `Hello World` app, containerized and deployed to `AWS EKS` or `Docker-Desktop Cluster` via a GitOps Driven CI/CD pipeline
+- Pull requests to `main` must pass tests before merge, and ArgoCD continuously syncs `main` to the cluster
 
 ## Project Overview:
 - Python Flask “Hello World” app with `/healthz` endpoint
@@ -12,7 +12,7 @@
 - **Terraform**:
   - Bootstrap: S3 bucket + DynamoDB for remote state
   - EKS cluster: VPC, node group, IRSA
-  - GitHub OIDC `Commented` (not needed for current workflow)
+  - GitHub OIDC `commented-out` (not needed for current workflow)
 - **GitHub Actions CI/CD**:
   - SubBranchCI:
     - Runs tests when `app/`, `tests/`, `docker-compose.yml` change
@@ -26,10 +26,10 @@
   - PostSync smoke-test Job probes `/healthz` via Service to gate Rollouts
   - Rollback(Manual): `kubectl rollout undo` or `argocd app rollback`
 - Ingress:
-  - `argocd` Ingress → Argo CD dashboard
+  - `argocd` Ingress → ArgoCD dashboard
   - `hello` Ingress → app root `/` and `/healthz`
 - Monitoring:
-  - AWS CloudWatch + Container Insights (basic logs and metrics)
+  - AWS CloudWatch + Container Insights for basic logs and metrics
 
 # CICD Diagram:
 ![CICD](./media/CICD.drawio.png)
