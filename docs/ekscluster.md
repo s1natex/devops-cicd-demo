@@ -70,12 +70,12 @@ aws logs describe-log-groups --log-group-name-prefix "/aws/containerinsights/my-
 # List metrics
 aws cloudwatch list-metrics --namespace "ContainerInsights" --region eu-north-1 --max-items 5
 ```
-### 11. Install Argo CD on EKS
+### 11. Install ArgoCD on EKS
 ```
 kubectl create namespace argocd
 kubectl -n argocd apply -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 ```
-### 12. Wait for Argo CD to be ready
+### 12. Wait for ArgoCD to be ready
 ```
 kubectl -n argocd rollout status deploy/argocd-server
 kubectl -n argocd rollout status deploy/argocd-repo-server
@@ -89,7 +89,7 @@ kubectl -n argocd rollout status statefulset/argocd-application-controller
 kubectl -n argocd describe statefulset argocd-application-controller
 kubectl -n argocd logs statefulset/argocd-application-controller -c argocd-application-controller
 ```
-### 14. Expose Argo CD server on EKS
+### 14. Expose ArgoCD server on EKS
 ```
 kubectl -n argocd patch svc argocd-server -p '{"spec": {"type": "LoadBalancer"}}'
 kubectl -n argocd get svc argocd-server
@@ -108,7 +108,7 @@ kubectl apply -f argo/app-of-apps.yaml
 ```
 kubectl apply -f argo/apps/hello.yaml
 ```
-### 17. Watch Argo CD sync status
+### 17. Watch ArgoCD sync status
 ```
 kubectl -n argocd get applications
 kubectl -n argocd get pods -n app
@@ -166,7 +166,7 @@ echo "http://$APP_ALB/"
 echo "Healthz:"
 echo "http://$APP_ALB/healthz"
 ```
-### 20. Clean up app and Argo CD
+### 20. Clean up app and ArgoCD
 ```
 kubectl delete namespace app --wait=false || true
 kubectl -n argocd delete application --all || true

@@ -41,18 +41,18 @@ http://localhost:8080
 ```
 curl http://localhost:8080/healthz
 ```
-### 7. Install Argo CD
+### 7. Install ArgoCD
 ```
 kubectl create namespace argocd
 kubectl -n argocd apply -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 ```
-### 8. Wait until Argo CD pods are ready
+### 8. Wait until ArgoCD pods are ready
 ```
 kubectl -n argocd rollout status deploy/argocd-server
 kubectl -n argocd rollout status deploy/argocd-repo-server
 kubectl -n argocd rollout status statefulset/argocd-application-controller
 ```
-### 9. Troubleshooting Argo CD startup
+### 9. Troubleshooting ArgoCD startup
 #### If "argocd-application-controller not found"
 ```
 kubectl -n argocd get pods
@@ -61,11 +61,11 @@ kubectl -n argocd rollout status statefulset/argocd-application-controller
 kubectl -n argocd describe statefulset argocd-application-controller
 kubectl -n argocd logs statefulset/argocd-application-controller -c argocd-application-controller
 ```
-### 10. Port-forward Argo CD UI with Port Forwarding
+### 10. Port-forward ArgoCD UI with Port Forwarding
 ```
 kubectl -n argocd port-forward svc/argocd-server 8081:443 &
 ```
-#### Argo CD URL:
+#### ArgoCD URL:
 ```
 https://localhost:8081
 
@@ -81,7 +81,7 @@ kubectl apply -f argo/app-of-apps.yaml
 ```
 kubectl apply -f argo/apps/hello.yaml
 ```
-### 13. Watch Argo CD sync status
+### 13. Watch ArgoCD sync status
 ```
 kubectl -n argocd get applications
 kubectl -n argocd get pods -n app
